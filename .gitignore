@@ -26,3 +26,11 @@ venv/
 # logs
 *.log
 npm-debug.log*
+.qdrant/
+
+# vector store + index state
+.checkpoint.json
+
+# next
+web/tsconfig.tsbuildinfo
+.pytest_cache/
