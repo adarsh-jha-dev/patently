@@ -1,5 +1,17 @@
 export type CoverageLevel = "covered" | "partial" | "absent";
 
+/** Mirrors patently.schemas.Rubric. Values are the human-readable answer text,
+ *  or the literal "unsure" sentinel, which the backend drops before prompting. */
+export interface Rubric {
+  field: string;
+  kind: string;
+  components: string;
+  io: string;
+  prior_approach: string;
+  novelty: string;
+  context: string;
+}
+
 export interface Element {
   id: string;
   label: string;
@@ -67,6 +79,9 @@ export interface AnalyzeResult {
   verdict: Verdict;
   stats: Record<string, number>;
   elapsed_ms?: number;
+  /** Present once the analysis has been saved; absent when DATABASE_URL is
+   *  unset, in which case there is nothing to link to. */
+  slug?: string | null;
 }
 
 /** The decomposition arrives before the results, so the UI can show it early. */

@@ -1,15 +1,17 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { Composer } from "@/components/Composer";
+import { ArrowLeft } from "lucide-react";
+import { RubricForm } from "@/components/RubricForm";
 import { Progress } from "@/components/Progress";
-import { VerdictPanel } from "@/components/Verdict";
-import { CoverageMatrix } from "@/components/CoverageMatrix";
-import { Angles, Combinations, References, Whitespace } from "@/components/Findings";
+import { Report } from "@/components/Report";
+import { ShareLink } from "@/components/ShareLink";
+import { EMPTY_RUBRIC, type RubricValues } from "@/lib/rubric";
 import type { AnalyzeResult, Plan } from "@/lib/types";
 
 export default function Home() {
   const [text, setText] = useState("");
+  const [rubric, setRubric] = useState<RubricValues>(EMPTY_RUBRIC);
   const [running, setRunning] = useState(false);
   const [stage, setStage] = useState("");
   const [message, setMessage] = useState("");
@@ -17,6 +19,18 @@ export default function Home() {
   const [result, setResult] = useState<AnalyzeResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const abort = useRef<AbortController | null>(null);
+
+  const reset = useCallback(() => {
+    setText("");
+    setRubric(EMPTY_RUBRIC);
+    setError(null);
+  }, []);
+
+  const backToForm = useCallback(() => {
+    setResult(null);
+    setPlan(null);
+    setError(null);
+  }, []);
 
   const run = useCallback(async () => {
     abort.current?.abort();
@@ -34,7 +48,10 @@ export default function Home() {
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ description: text }),
+        // The rubric rides alongside the description. Fields the user marked
+        // "not sure" are sent as-is and dropped server-side, so the client
+        // never has to decide what counts as knowledge.
+        body: JSON.stringify({ description: text, rubric }),
         signal: controller.signal,
       });
       if (!res.body) throw new Error("No response stream");
@@ -95,11 +112,11 @@ export default function Home() {
       }
       setRunning(false);
     }
-  }, [text]);
+  }, [text, rubric]);
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-14 sm:py-20">
-      <header className="mb-10">
+      <header className="mb-8">
         <h1 className="text-[15px] font-medium tracking-tight">Patently</h1>
         <p className="mt-1 max-w-xl text-[14px] leading-relaxed text-[var(--text-muted)]">
           Describe an invention. Get back which parts of it the prior art
@@ -108,17 +125,10 @@ export default function Home() {
         </p>
       </header>
 
-      <Composer
-        value={text}
-        onChange={setText}
-        onSubmit={run}
-        running={running}
-      />
-
       {error && (
         <div
           role="alert"
-          className="mt-8 rounded-lg border px-4 py-3 text-[13px]"
+          className="mb-6 rounded-lg border px-4 py-3 text-[13px]"
           style={{
             borderColor: "var(--covered)",
             background: "var(--covered-tint)",
@@ -129,40 +139,42 @@ export default function Home() {
       )}
 
       {running && (
-        <div className="mt-10">
-          <Progress stage={stage} message={message} plan={plan} />
-        </div>
+        <Progress stage={stage} message={message} plan={plan} />
       )}
 
-      {result && (
-        <div className="mt-12 space-y-8">
-          <VerdictPanel result={result} />
-          <CoverageMatrix result={result} />
-          <div className="grid items-start gap-4 md:grid-cols-2">
-            <Whitespace result={result} />
-            <Combinations result={result} />
+      {!running && !result && (
+        <RubricForm
+          description={text}
+          onDescription={setText}
+          values={rubric}
+          onChange={setRubric}
+          onSubmit={run}
+          onReset={reset}
+          running={running}
+        />
+      )}
+
+      {!running && result && (
+        <div className="space-y-8">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={backToForm}
+              className="inline-flex items-center gap-1.5 text-[12px] text-[var(--text-muted)] transition-colors hover:text-[var(--text)]"
+            >
+              <ArrowLeft size={13} strokeWidth={2} />
+              Back to the form
+            </button>
           </div>
-          <References result={result} />
-          <Angles result={result} />
 
-          <footer className="border-t border-[var(--border)] pt-5 text-[11px] leading-relaxed text-[var(--text-faint)]">
-            <p>
-              {result.stats.llm_calls} model calls ·{" "}
-              {result.stats.pool} patents reached ·{" "}
-              {result.stats.assessed} assessed
-              {result.elapsed_ms
-                ? ` · ${(result.elapsed_ms / 1000).toFixed(1)}s`
-                : ""}
-            </p>
-            <p className="mt-1.5 max-w-2xl">
-              Patently searches an indexed corpus, not the full patent
-              literature — an empty result means nothing was found in what was
-              indexed, not that nothing exists. This is a research tool and not
-              a freedom-to-operate opinion or legal advice.
-            </p>
-          </footer>
+          {/* Only offered when the analysis was actually filed — a link that
+              404s is worse than no link. */}
+          {result.slug && <ShareLink slug={result.slug} />}
+
+          <Report result={result} />
         </div>
       )}
+
     </main>
   );
 }
