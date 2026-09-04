@@ -27,8 +27,22 @@ from .schemas import (
     ElementRisk,
     Query,
     Reference,
+    Rubric,
     Verdict,
 )
+
+# Human-readable headings for the rubric fields, in the order they are shown
+# to the model. Ordered so the substance (mechanism, components) precedes the
+# framing, because the framing only qualifies it.
+RUBRIC_LABELS: list[tuple[str, str]] = [
+    ("components", "KEY PARTS OR STEPS"),
+    ("io", "INPUTS AND OUTPUTS"),
+    ("prior_approach", "CLOSEST EXISTING APPROACH"),
+    ("novelty", "CLAIMED NOVELTY"),
+    ("field", "FIELD"),
+    ("kind", "FORM"),
+    ("context", "OPERATING CONTEXT"),
+]
 
 # Weight of each coverage level when scoring how much of the invention a
 # reference (or a combination) reads on.
@@ -68,10 +82,44 @@ def _verify_quote(quote: str, abstract: str) -> bool:
     return q in _normalise(abstract)
 
 
-async def _decompose(description: str) -> dict[str, Any]:
+def render_rubric(rubric: Rubric | None) -> str:
+    """
+    Render the answered rubric fields as a prompt block.
+
+    Unanswered fields and fields explicitly marked "not sure" are omitted
+    entirely rather than sent as "unknown". That distinction is the whole
+    point of offering a "not sure" option: telling the model a field is
+    unknown invites it to fill the gap with a plausible guess, and a guessed
+    technical field silently narrows every query angle that follows it. An
+    omitted field just leaves the model searching broadly on that axis, which
+    is the correct behaviour when nobody knows the answer.
+    """
+    if rubric is None:
+        return ""
+    answered = rubric.answered()
+    lines = [
+        f"{heading}: {answered[key]}"
+        for key, heading in RUBRIC_LABELS
+        if key in answered
+    ]
+    if not lines:
+        return ""
+    return "STRUCTURED FRAMING\n" + "\n".join(lines)
+
+
+async def _decompose(
+    description: str, rubric: Rubric | None = None
+) -> dict[str, Any]:
+    framing = render_rubric(rubric)
+    system = prompts.DECOMPOSE_SYSTEM
+    user = f"Invention disclosure:\n\n{description.strip()}"
+    if framing:
+        system = system + "\n" + prompts.DECOMPOSE_RUBRIC_GUIDANCE
+        user = f"{user}\n\n{framing}"
+
     data = await complete_json(
-        system=prompts.DECOMPOSE_SYSTEM,
-        user=f"Invention disclosure:\n\n{description.strip()}",
+        system=system,
+        user=user,
         schema=prompts.DECOMPOSE_SCHEMA,
         max_tokens=3000,
     )
@@ -350,6 +398,7 @@ async def run_analysis(
     store: Store,
     top_k: int | None = None,
     on_progress: Callable[[str, dict], Any] | None = None,
+    rubric: Rubric | None = None,
 ) -> AnalyzeResult:
     """Run the full pipeline. `on_progress(stage, payload)` is awaited if given."""
     top_k = top_k or config.ASSESS_TOP_K
@@ -359,7 +408,7 @@ async def run_analysis(
             await on_progress(stage, payload)
 
     await emit("decompose", {"message": "Decomposing invention into claim elements"})
-    plan = await _decompose(description)
+    plan = await _decompose(description, rubric)
     elements: list[Element] = plan["elements"]
     queries: list[Query] = plan["queries"]
     if not queries:
@@ -433,5 +482,6 @@ async def run_analysis(
             "pool": len(fused),
             "assessed": len(candidates),
             "quotes_demoted": demoted,
+            "rubric_fields": len(rubric.answered()) if rubric else 0,
         },
     )

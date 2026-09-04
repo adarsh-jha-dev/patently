@@ -110,9 +110,55 @@ class Verdict(BaseModel):
     top_relevance: int = 0
 
 
+# The sentinel a rubric field carries when the user explicitly said they don't
+# know. It is deliberately distinct from "" (not answered): an unanswered form
+# is incomplete, whereas "I don't know" is a legitimate, complete answer that
+# a novice must be able to give. Both are dropped before the prompt is built —
+# see render_rubric — so an unknown never becomes a wrong prior.
+UNSURE = "unsure"
+
+
+class Rubric(BaseModel):
+    """
+    Structured framing collected alongside the free-text description.
+
+    Every field here exists because it changes the search. `field` and
+    `context` set the terminology register the query angles are written in;
+    `kind` decides whether elements decompose as process steps or as
+    structural limitations; `prior_approach` supplies the closest-known-art
+    angle directly, which is the single hardest angle for the model to guess.
+    Nothing is collected merely to look thorough.
+    """
+
+    # No "mechanism" field: the free-text description already carries it, and
+    # asking twice trains people to paste the same paragraph into both.
+    field: str = ""       # technical domain
+    kind: str = ""        # method / apparatus / system / algorithm / composition
+    components: str = ""  # key parts or steps
+    io: str = ""          # what goes in, what comes out
+    prior_approach: str = ""  # closest existing way this is done today
+    novelty: str = ""     # what the applicant believes is new
+    context: str = ""     # operating environment
+
+    def answered(self) -> dict[str, str]:
+        """Only the fields carrying real information."""
+        return {
+            k: v.strip()
+            for k, v in self.model_dump().items()
+            if v and v.strip() and v.strip() != UNSURE
+        }
+
+    def unsure(self) -> list[str]:
+        return [
+            k for k, v in self.model_dump().items()
+            if (v or "").strip() == UNSURE
+        ]
+
+
 class AnalyzeRequest(BaseModel):
     description: str = Field(..., min_length=40, max_length=20000)
     top_k: Optional[int] = Field(None, ge=3, le=25)
+    rubric: Optional[Rubric] = None
 
 
 class AnalyzeResult(BaseModel):
@@ -126,3 +172,17 @@ class AnalyzeResult(BaseModel):
     combinations: list[Combination]
     verdict: Verdict
     stats: dict = {}
+    # Set once the analysis has been persisted; None when DATABASE_URL is
+    # unset, so the UI shows a share link only when there is something to link.
+    slug: Optional[str] = None
+
+
+class SavedSummary(BaseModel):
+    slug: str
+    created_at: str
+    title: str
+    label: str
+    novelty_score: Optional[int] = None
+    conclusive: bool
+    corpus: str
+    corpus_size: int

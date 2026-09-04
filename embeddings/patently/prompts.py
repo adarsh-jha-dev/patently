@@ -23,6 +23,21 @@ of a patent abstract — declarative noun phrases, standard technical \
 terminology, no marketing words, no question forms. Prefer the term of art \
 over the applicant's coinage. Each query should be 12 to 30 words."""
 
+# Appended to DECOMPOSE_SYSTEM only when the user filled in the guided form.
+# Kept separate so a plain free-text analysis is byte-identical to what it was
+# before the rubric existed — the structured path must be an addition, not a
+# regression for people who just want to paste a paragraph.
+DECOMPOSE_RUBRIC_GUIDANCE = """
+The disclosure below was collected through a guided form, so some framing is given to you explicitly under STRUCTURED FRAMING. Use it as follows:
+
+- FIELD and OPERATING CONTEXT set the vocabulary. Write queries in the terminology that field's patents actually use, not the applicant's wording.
+- FORM tells you how to decompose. A method or process decomposes into ordered steps; a device or system decomposes into structural components and their couplings; an algorithm decomposes into data structures and operations on them.
+- CLOSEST EXISTING APPROACH, when present, is the applicant's own statement of the art they are improving on. Spend one query on that approach directly — it is the most likely source of an anticipating reference, and it is the angle you are least able to infer without being told.
+- CLAIMED NOVELTY is a hypothesis, not a finding. Order the elements so it is tested first, but never treat it as established.
+
+Fields the applicant could not answer are simply absent. Absent means unknown: do not infer a value for it, do not treat it as a negative, and do not narrow the search on account of it. Where framing is missing, search more broadly on that axis rather than guessing."""
+
+
 DECOMPOSE_SCHEMA = {
     "type": "object",
     "properties": {

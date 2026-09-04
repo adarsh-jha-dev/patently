@@ -25,6 +25,10 @@ VECTOR_SIZE = 1024
 
 COLLECTION = os.getenv("PATENTLY_COLLECTION", "patents")
 
+# Recorded on every saved analysis. Change it whenever the indexed corpus
+# changes, so old rows keep saying what they were actually searched against.
+CORPUS = os.getenv("PATENTLY_CORPUS", "big_patent:g")
+
 QDRANT_URL = os.getenv("QDRANT_URL")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
 

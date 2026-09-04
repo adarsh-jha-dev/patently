@@ -9,6 +9,10 @@ Routes:
   POST /analyze/stream
                  the same analysis as Server-Sent Events, so the UI can show
                  progress across a pipeline that takes 10-30s
+  GET  /analyses          recent saved analyses (newest first)
+  GET  /analyses/{slug}   one saved analysis, whole
+
+The last two are no-ops unless DATABASE_URL is set — see patently/db.py.
 
 Run locally:
   cd embeddings && uvicorn main:app --reload --port 8000
@@ -29,6 +33,7 @@ from fastapi.responses import StreamingResponse
 
 from patently import config
 from patently.analyze import run_analysis
+from patently.db import Database
 from patently.llm import provider_status
 from patently.retrieval import Embedder, Store
 from patently.schemas import (
@@ -36,6 +41,7 @@ from patently.schemas import (
     AnalyzeResult,
     EmbedRequest,
     EmbedResponse,
+    SavedSummary,
     SearchHit,
     SearchRequest,
     SearchResponse,
@@ -63,6 +69,10 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             print(f"[startup] qdrant reachable but collection check failed: {e}")
 
+    app.state.db = await Database.connect()
+    print("[startup] saving analyses to postgres" if app.state.db
+          else "[startup] DATABASE_URL unset — analyses are not saved")
+
     status = provider_status()
     if not status["key_present"]:
         print(f"[startup] warning: no API key for provider '{status['provider']}' "
@@ -74,6 +84,8 @@ async def lifespan(app: FastAPI):
 
     if app.state.store is not None:
         app.state.store.close()  # releases the local directory lock
+    if app.state.db is not None:
+        await app.state.db.close()
     print("[shutdown] bye")
 
 
@@ -86,6 +98,38 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+async def _persist(app: FastAPI, req: AnalyzeRequest, payload: dict) -> str | None:
+    """
+    File a finished analysis and hand back its slug.
+
+    Deliberately swallows everything: the analysis has already cost two model
+    calls by this point, and losing it because the archive is unreachable would
+    be the worst possible trade.
+    """
+    if app.state.db is None:
+        return None
+    try:
+        size = app.state.store.count() if app.state.store else 0
+    except Exception:
+        size = 0
+    return await app.state.db.save(
+        description=req.description,
+        rubric=req.rubric.model_dump() if req.rubric else None,
+        result=payload,
+        corpus=config.CORPUS,
+        corpus_size=size,
+        model=provider_status()["model"],
+    )
+
+
+def _require_db(app: FastAPI) -> Database:
+    if app.state.db is None:
+        raise HTTPException(
+            503, "persistence not configured (set DATABASE_URL)"
+        )
+    return app.state.db
 
 
 def _require_store(app: FastAPI) -> Store:
@@ -144,13 +188,20 @@ def search(req: SearchRequest):
 async def analyze(req: AnalyzeRequest):
     store = _require_store(app)
     try:
-        return await run_analysis(
-            req.description, app.state.embedder, store, top_k=req.top_k
+        result = await run_analysis(
+            req.description,
+            app.state.embedder,
+            store,
+            top_k=req.top_k,
+            rubric=req.rubric,
         )
     except ValueError as e:
         raise HTTPException(422, str(e))
     except Exception as e:
         raise HTTPException(502, f"analysis failed: {e}")
+
+    result.slug = await _persist(app, req, result.model_dump())
+    return result
 
 
 @app.post("/analyze/stream")
@@ -188,9 +239,13 @@ async def analyze_stream(req: AnalyzeRequest):
                     store,
                     top_k=req.top_k,
                     on_progress=on_progress,
+                    rubric=req.rubric,
                 )
                 payload = result.model_dump()
                 payload["elapsed_ms"] = int((time.time() - started) * 1000)
+                # Saved before the frame is emitted so the slug travels with
+                # the result and the UI can offer the link immediately.
+                payload["slug"] = await _persist(app, req, payload)
                 await queue.put(push("result", payload))
             except Exception as e:
                 await queue.put(push("error", {"message": str(e)}))
@@ -215,3 +270,18 @@ async def analyze_stream(req: AnalyzeRequest):
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+@app.get("/analyses", response_model=list[SavedSummary])
+async def list_analyses(limit: int = 20):
+    db = _require_db(app)
+    return await db.recent(min(max(limit, 1), 100))
+
+
+@app.get("/analyses/{slug}")
+async def get_analysis(slug: str):
+    db = _require_db(app)
+    saved = await db.get(slug)
+    if saved is None:
+        raise HTTPException(404, "no analysis with that slug")
+    return saved
