@@ -34,3 +34,4 @@ npm-debug.log*
 # next
 web/tsconfig.tsbuildinfo
 .pytest_cache/
+.migrate_checkpoint.json

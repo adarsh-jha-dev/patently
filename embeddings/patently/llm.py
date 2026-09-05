@@ -84,7 +84,10 @@ async def _call_gemini(
         "systemInstruction": {"parts": [{"text": system}]},
         "contents": [{"role": "user", "parts": [{"text": user}]}],
         "generationConfig": {
-            "temperature": 0.1,
+            # Schema-constrained extraction, not generation — sampling only
+            # adds run-to-run drift. Note this does not buy determinism:
+            # Gemini exposes no seed and still varies at 0.
+            "temperature": 0.0,
             "maxOutputTokens": max_tokens,
             "responseMimeType": "application/json",
             "responseSchema": _to_gemini_schema(schema),
@@ -143,10 +146,10 @@ def _openai_payload(
     else:
         payload["max_completion_tokens"] = max_tokens
 
-    # Reasoning models only accept the default temperature. Everything else
-    # benefits from a low one for extraction work.
+    # Reasoning models only accept the default temperature; everything else
+    # gets 0, since this is extraction rather than generation.
     if "no_temperature" not in _OPENAI_QUIRKS:
-        payload["temperature"] = 0.1
+        payload["temperature"] = 0.0
 
     return payload
 

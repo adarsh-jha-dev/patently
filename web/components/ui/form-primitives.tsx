@@ -8,18 +8,12 @@ import { cn } from "@/lib/utils";
 import { UNSURE } from "@/lib/rubric";
 
 /**
- * Shared form parts, built on Radix primitives but wearing the page's own
- * tokens rather than a second theme layer.
- *
- * The one interaction worth calling out: an "unsure" answer is styled as a
- * deliberate choice (dashed outline, muted, ticked when active) and never as a
- * skip or a disabled state. It has to feel like a legitimate thing to click,
- * because for a first-time inventor it usually is — and a form that shames you
- * for not knowing your CPC class gets abandoned instead of answered.
+ * Shared form parts on Radix primitives, wearing the page's own tokens rather
+ * than a second theme layer. An "unsure" answer is styled as a deliberate
+ * choice (dashed, ticked when active), never as a skip or a disabled state.
  */
 
-/** Click-to-open help. A disclosure rather than a tooltip so it also works on
- *  touch and stays reachable from the keyboard. */
+/** A disclosure rather than a tooltip, so it works on touch and by keyboard. */
 export function Help({ text }: { text: string }) {
   const [open, setOpen] = useState(false);
   const id = useId();
@@ -115,8 +109,8 @@ export function ChoiceAnswer({
   disabled?: boolean;
 }) {
   return (
-    // Radix gives this real radio semantics: arrow-key roving focus, one tab
-    // stop for the whole group, correct announcement. Worth the dependency.
+    // Radix gives real radio semantics: roving focus, one tab stop, correct
+    // announcement.
     <RadioGroup.Root
       value={value}
       onValueChange={onChange}

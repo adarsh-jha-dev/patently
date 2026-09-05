@@ -1,26 +1,13 @@
 /**
  * The guided disclosure form.
  *
- * Every field here has to earn its place by changing the search, because each
- * one is a question a nervous first-time inventor has to answer before they
- * get anything back. The test is simple: if the analysis would be identical
- * whether or not the field were answered, the field should not exist.
+ * Every field earns its place by changing the search: field/context set the
+ * terminology, kind decides whether elements decompose as steps or structure,
+ * prior_approach supplies the angle hardest for the model to guess. There is
+ * deliberately no "mechanism" field — the description already carries it.
  *
- *   field, context   set the terminology the query angles are written in
- *   kind             decides whether elements decompose as steps or structure
- *   components, io   supply the mechanism detail a paragraph usually omits
- *   prior_approach   supplies the closest-art angle, the hardest one to guess
- *   novelty          orders the elements so the claimed advance is tested first
- *
- * The free-text description is deliberately NOT duplicated here as a
- * "mechanism" field — asking the same question twice just teaches people to
- * paste the same paragraph into both boxes.
- *
- * `UNSURE` is a first-class answer, not a skip. A novice who cannot name their
- * technical field must still be able to complete the form, and saying so
- * explicitly is more honest than a blank that could mean either "unknown" or
- * "not looked at yet". The backend drops these before building the prompt, so
- * an unknown never becomes a wrong prior — see patently/analyze.py.
+ * UNSURE is a first-class answer, not a skip, and the backend drops those
+ * before prompting so an unknown never becomes a wrong prior.
  */
 
 export const UNSURE = "unsure";

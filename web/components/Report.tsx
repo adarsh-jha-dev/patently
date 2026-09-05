@@ -6,16 +6,9 @@ import { Angles, Combinations, References, Whitespace } from "@/components/Findi
 import type { AnalyzeResult } from "@/lib/types";
 
 /**
- * The finished report.
- *
- * Extracted so a live analysis and a saved permalink render through exactly
- * the same component — if they diverged, a shared link would quietly stop
- * being the thing the sender actually saw.
- *
- * `corpus` is passed separately because a saved row knows what it was searched
- * against and a live result only knows what is in the index right now. Showing
- * it is not a footnote: a verdict of "Inconclusive" over 8,220 abstracts and
- * the same verdict over 258,935 are different claims about the world.
+ * Shared by the live analysis and the saved permalink, so a shared link cannot
+ * drift from what the sender saw. `corpus` is passed separately because only a
+ * saved row knows what it was searched against.
  */
 export function Report({
   result,

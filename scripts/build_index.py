@@ -10,38 +10,19 @@ Usage:
     python scripts/build_index.py                # full run, resumes automatically
     python scripts/build_index.py --fresh        # ignore the checkpoint
 
-WHY THIS READS PARQUET DIRECTLY
--------------------------------
-The obvious implementation is `load_dataset(..., streaming=True)`, and that is
-what this script used to do. Two things make it the wrong tool here:
+Reads parquet directly rather than via `load_dataset(streaming=True)`, for two
+reasons: column projection skips `description` (13.1 MB per row group against
+0.4 MB for `abstract`, so ~3.5 GB of transfer becomes ~100 MB), and resume is
+constant-time because shards that end before the checkpoint are skipped on
+their footer instead of being re-downloaded and decoded.
 
-1. It reads whole rows. BIGPATENT's `description` column is the full patent
-   specification and we discard it — but streaming still pays for it. Measured
-   on one `g` shard: `description` is 13.1 MB compressed per row group against
-   0.4 MB for `abstract`. Reading only the column we use cuts the transfer for
-   subset `g` from roughly 3.5 GB to about 100 MB.
+Shards are read in sorted filename order, matching what `datasets` streamed, so
+`patent_id` stays stable across the two readers — verified against the live
+collection on resume rather than assumed.
 
-2. Resume was O(n) in what had already been done. `islice(ds, start_index, ...)`
-   re-downloads and decodes every record before the resume point. Restarting a
-   run at record 200,000 meant pulling ~2.7 GB before embedding anything.
-
-Parquet is columnar and carries row counts in its footer, so we can project the
-one column we need and skip whole shards after reading a few KB of metadata.
-Resuming is then constant-time regardless of how far in we are.
-
-Global row index is preserved across both readers: shards are read in sorted
-filename order, which is the order `datasets` streams them in, so `patent_id`
-values stay stable for anything already indexed. `--verify-resume` (on by
-default when resuming) proves this against the live collection rather than
-trusting it.
-
-SURVIVING A SLEEPING MACHINE
-----------------------------
-A full run is a couple of hours of near-continuous GPU work, which is longer
-than the default idle-sleep timer. On macOS the script holds a `caffeinate` assertion tied to its
-own PID for as long as it runs. Note that preventing *system* sleep only works
-on AC power — on battery macOS will still suspend, and the run resumes from the
-last checkpoint when you wake it.
+The run holds a `caffeinate` assertion tied to its own PID. Preventing system
+sleep only works on AC; on battery the machine still suspends and the run picks
+up from the last checkpoint.
 """
 
 import argparse
@@ -155,11 +136,8 @@ def verify_alignment(fs: HfFileSystem, store: Store, start_index: int) -> None:
     """
     Confirm this reader's global indexing matches what is already in Qdrant.
 
-    `patent_id` is `bp-<subset>-<global row index>`, so if the parquet read
-    order ever diverged from the order the previous run used, the same abstract
-    would be stored twice under two ids and the corpus would silently grow a
-    duplicate of everything indexed so far. Cheaper to prove it than to trust
-    it: two probes, one row group each.
+    `patent_id` encodes the global row index, so a divergent read order would
+    silently duplicate the corpus under shifted ids. Two probes, one row group.
     """
     probes = sorted({0, max(0, start_index // 2)})
     for probe in probes:
@@ -222,12 +200,8 @@ def install_term_handler() -> None:
 
 def prevent_sleep() -> subprocess.Popen | None:
     """
-    Keep the machine awake for exactly as long as this process lives.
-
-    `-w <pid>` ties the assertion to our PID, so the helper exits when we do
-    even if we are killed — no stray process left holding the machine awake.
-    `-s` (prevent system sleep) is only honoured on AC power; on battery the
-    machine still sleeps and the run picks up from the last checkpoint.
+    `-w <pid>` ties the assertion to our PID so no stray helper outlives us.
+    `-s` is only honoured on AC power.
     """
     if sys.platform != "darwin":
         return None
@@ -243,11 +217,8 @@ def prevent_sleep() -> subprocess.Popen | None:
 
 def upsert_with_retry(qdrant, points: list[PointStruct]) -> None:
     """
-    Retry an upsert with exponential backoff.
-
-    An hour-long run against a hosted cluster will hit a transient network
-    error or a rate limit eventually. Without this, one blip discards every
-    embedding computed since the last checkpoint.
+    Retry with backoff — one network blip should not discard every embedding
+    computed since the last checkpoint.
     """
     for attempt in range(UPSERT_ATTEMPTS):
         try:
@@ -349,12 +320,8 @@ def main():
         vectors = embedder.encode([p["abstract"] for p in embed_buffer],
                                   batch_size=EMBED_BATCH)
         if args.throttle:
-            # Duty-cycling rather than clock-limiting: the GPU still runs flat
-            # out during a batch, but idles between them, so average power (and
-            # therefore steady-state temperature) drops roughly in proportion.
-            # Total energy for the run is close to unchanged — this trades peak
-            # temperature for time under load, which is the trade you want when
-            # the machine is on a lap or the fan noise is the problem.
+            # Duty-cycling: the GPU still runs flat out per batch but idles
+            # between them, trading peak temperature for time under load.
             time.sleep(args.throttle)
         for p, vec in zip(embed_buffer, vectors):
             upsert_buffer.append(PointStruct(

@@ -1,12 +1,9 @@
 """
 The wire contract between the web form and the analysis request.
 
-The rubric's field names exist in two places — `web/lib/rubric.ts` builds the
-JSON and `patently.schemas.Rubric` parses it — and pydantic ignores keys it
-does not recognise. A renamed field on either side would therefore not raise
-anything: the value would simply stop reaching the prompt, and the analysis
-would quietly get worse with no error anywhere. These tests fail loudly
-instead.
+Field names live in both rubric.ts and schemas.Rubric, and pydantic ignores keys
+it does not recognise — so a rename on either side would silently stop reaching
+the prompt with no error anywhere. These fail loudly instead.
 
     cd embeddings && python -m pytest tests/ -q
 """

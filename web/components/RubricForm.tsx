@@ -23,12 +23,8 @@ import {
 } from "@/lib/rubric";
 
 /**
- * The guided disclosure form.
- *
- * Laid out as one scrolling column rather than a wizard. A wizard would hide
- * how much is left, and the honest answer — nine short questions — is less
- * daunting than an unknown number of steps. Progress lives in a sticky footer
- * so it is legible without scrolling back.
+ * One scrolling column rather than a wizard — nine short questions is less
+ * daunting than an unknown number of steps. Progress sits in a sticky footer.
  */
 
 interface Example {

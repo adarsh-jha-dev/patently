@@ -1,11 +1,9 @@
 """
 Tests for the persistence layer that don't need a database.
 
-The DSN normaliser is the piece worth pinning. Every managed Postgres provider
-hands out a libpq-style URL with `?sslmode=require`, asyncpg does not
-understand that parameter, and the resulting failure reads like bad
-credentials rather than a malformed DSN — which is an hour of debugging the
-wrong thing. These tests hold that translation in place.
+The DSN normaliser is the piece worth pinning: managed providers hand out
+`?sslmode=require`, asyncpg rejects it, and the failure reads like bad
+credentials rather than a malformed DSN.
 
     cd embeddings && python -m pytest tests/ -q
 """

@@ -31,9 +31,7 @@ from .schemas import (
     Verdict,
 )
 
-# Human-readable headings for the rubric fields, in the order they are shown
-# to the model. Ordered so the substance (mechanism, components) precedes the
-# framing, because the framing only qualifies it.
+# Rubric headings, substance first — the framing only qualifies it.
 RUBRIC_LABELS: list[tuple[str, str]] = [
     ("components", "KEY PARTS OR STEPS"),
     ("io", "INPUTS AND OUTPUTS"),
@@ -56,10 +54,12 @@ _REF_TOKEN = re.compile(r"\bR\d{1,2}\b")
 # single-reference anticipation to reflect that.
 COMBINATION_DISCOUNT = 0.85
 
-# Below this, the best candidate the corpus could offer is not really on topic.
-# The honest reading is then "this corpus has nothing in your field", which is
-# a statement about the index, not about your invention.
-MIN_CONCLUSIVE_RELEVANCE = 25
+# Below this the best candidate isn't really on topic, and a clean result says
+# more about the index than about the invention. Calibrated against the full
+# index: an invention with genuinely no art here topped out at relevance 20, and
+# one the corpus should have engaged with at 25 — too close together for the old
+# threshold of 25, which reported the latter as "Open field, 100/100".
+MIN_CONCLUSIVE_RELEVANCE = 40
 
 
 def _normalise(text: str) -> str:
@@ -86,13 +86,9 @@ def render_rubric(rubric: Rubric | None) -> str:
     """
     Render the answered rubric fields as a prompt block.
 
-    Unanswered fields and fields explicitly marked "not sure" are omitted
-    entirely rather than sent as "unknown". That distinction is the whole
-    point of offering a "not sure" option: telling the model a field is
-    unknown invites it to fill the gap with a plausible guess, and a guessed
-    technical field silently narrows every query angle that follows it. An
-    omitted field just leaves the model searching broadly on that axis, which
-    is the correct behaviour when nobody knows the answer.
+    "Not sure" fields are omitted rather than sent as "unknown" — telling the
+    model a field is unknown invites it to guess one, and a guessed technical
+    field narrows every query angle downstream of it.
     """
     if rubric is None:
         return ""

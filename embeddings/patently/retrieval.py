@@ -21,16 +21,9 @@ from sentence_transformers import SentenceTransformer
 
 from . import config
 
-# The cloud collection stores int8-quantized vectors in RAM and the float32
-# originals on disk (see scripts/init_collection.py). Searching the quantized
-# index alone would quietly cost recall, so we over-fetch and rescore:
-#
-#   oversampling=2.0  pull 2x `limit` candidates using the fast int8 vectors
-#   rescore=True      re-rank those against the exact float32 vectors on disk
-#
-# The extra disk reads touch only the shortlist, so the cost is bounded while
-# the returned ordering matches an unquantized collection. Local embedded mode
-# has no quantization and ignores these.
+# The cloud collection is int8-quantized in RAM with float32 originals on disk.
+# Over-fetch 2x on the fast vectors and rescore against the exact ones, so the
+# ordering matches an unquantized collection. Local mode ignores this.
 SEARCH_PARAMS = SearchParams(
     quantization=QuantizationSearchParams(rescore=True, oversampling=2.0)
 )
@@ -62,12 +55,10 @@ def stable_point_id(key: str) -> int:
 class Embedder:
     def __init__(self, device: Optional[str] = None, half: bool = False):
         """
-        `half` runs the model in fp16. Measured on MPS this is 2.75x faster
-        (27.7 -> 76.2 abstracts/sec) and the vectors are equivalent: cosine
-        similarity against the fp32 embedding of the same text is >= 0.9995
-        (mean 1.0000) and top-10 neighbour lists are unchanged. Worth it for a
-        quarter-million-document index build; pointless for the 4-6 query
-        vectors a single analysis embeds, so the service leaves it off.
+        `half` runs the model in fp16 — 2.75x faster on MPS, with cosine
+        similarity >= 0.9995 against the fp32 embedding of the same text and
+        unchanged top-10 neighbours. Worth it for an index build, not for the
+        4-6 query vectors an analysis embeds.
         """
         self.device = device or pick_device()
         self.model = SentenceTransformer(config.EMBED_MODEL, device=self.device)

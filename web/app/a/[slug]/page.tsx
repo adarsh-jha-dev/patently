@@ -5,13 +5,8 @@ import { Report } from "@/components/Report";
 import { ShareLink } from "@/components/ShareLink";
 import type { AnalyzeResult } from "@/lib/types";
 
-/**
- * A saved analysis, by slug.
- *
- * Fetched on the server: this page is the thing people paste into Slack, so it
- * has to render its content on first paint rather than after a client round
- * trip, and the service URL stays server-side either way.
- */
+/** A saved analysis, by slug. Fetched server-side so it renders on first
+ *  paint and the service URL stays off the client. */
 
 export const dynamic = "force-dynamic";
 

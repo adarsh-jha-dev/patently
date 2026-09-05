@@ -1,11 +1,8 @@
 """
 Tests for the guided-form rubric.
 
-The behaviour that matters here is what does NOT reach the prompt. A field the
-user marked "not sure" must be indistinguishable from a field they never saw,
-because the alternative — telling the model a value is unknown — invites it to
-invent one, and an invented technical field narrows every query angle derived
-from it. These tests pin that down.
+What matters is what does NOT reach the prompt: a "not sure" field must be
+indistinguishable from one the user never saw.
 
     cd embeddings && python -m pytest tests/ -q
 """

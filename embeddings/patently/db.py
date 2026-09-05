@@ -1,30 +1,16 @@
 """
 Saved analyses.
 
-One table. An analysis is expensive to produce (two LLM calls and a retrieval
-pass, 10-30s) and currently evaporates the moment the tab closes — so it gets a
-row and a shareable slug.
+One table. `result` is JSONB because the AnalyzeResult shape is still moving and
+a migration per field would make changing the pipeline expensive; the few scalar
+columns exist only so the listing query need not deserialise every row.
 
-TWO DESIGN CHOICES WORTH THE WORDS
-----------------------------------
-1. `result` is JSONB, not columns. The AnalyzeResult shape is still moving
-   (`rubric_fields` landed in stats this week), and a schema migration per
-   field would make changing the pipeline expensive in exactly the phase where
-   it should be cheap. The handful of scalars that get their own columns —
-   title, score, label — exist only so the listing query does not have to
-   deserialise every row, and `result` stays the source of truth for all of
-   them.
+Every row records the corpus it ran against — "Inconclusive" over 8,220
+abstracts and over 258,935 are different claims, and without `corpus_size` you
+cannot tell them apart later.
 
-2. Every row records the corpus it ran against. A saved verdict is meaningless
-   without knowing how much index existed when it was produced: "Inconclusive"
-   against 8,220 abstracts and "Inconclusive" against 258,935 are completely
-   different claims, and without `corpus_size` you cannot tell them apart a
-   month later. It is also what makes a future corpus change legible instead of
-   mysterious — old rows keep saying what they actually searched.
-
-The whole module is optional. With DATABASE_URL unset, `Database.connect`
-returns None and every call site degrades to not saving. Persistence is a
-feature of the service, never a requirement for running it.
+Optional throughout: with DATABASE_URL unset, `connect` returns None and every
+call site degrades to not saving.
 """
 
 from __future__ import annotations
@@ -73,16 +59,9 @@ CREATE INDEX IF NOT EXISTS analyses_created_at_idx
 
 def normalise_dsn(url: str) -> tuple[str, Optional[ssl.SSLContext]]:
     """
-    Turn a hosted-Postgres URL into something asyncpg accepts.
-
-    Neon, Supabase and friends hand out `...?sslmode=require`, which is libpq
-    syntax. asyncpg does not parse it — it takes an `ssl=` argument instead and
-    raises on the unknown parameter, which surfaces as a connection error that
-    looks like a credentials problem and is not. Strip the libpq-only query
-    parameters and translate them.
-
-    `postgresql+asyncpg://` (SQLAlchemy's dialect form) is also accepted and
-    reduced, since that is what most copy-pasted examples use.
+    Managed providers hand out libpq-style `?sslmode=require`, which asyncpg
+    does not parse — it takes an `ssl=` argument and raises on the unknown
+    parameter, surfacing as what looks like a credentials error. Translate it.
     """
     parsed = urlparse(url.replace("postgresql+asyncpg://", "postgresql://"))
     params = dict(parse_qsl(parsed.query))
@@ -106,11 +85,8 @@ def normalise_dsn(url: str) -> tuple[str, Optional[ssl.SSLContext]]:
 
 def new_slug() -> str:
     """
-    Short, URL-safe, unguessable share token.
-
-    Unguessable matters more than short here: a slug is the only thing standing
-    between an unlisted analysis and anyone who can type a URL, so this is a
-    CSPRNG rather than a counter or a hash of the description.
+    A slug is the only thing between an unlisted analysis and anyone who can
+    type a URL, so this is a CSPRNG rather than a counter.
     """
     return secrets.token_urlsafe(9)
 

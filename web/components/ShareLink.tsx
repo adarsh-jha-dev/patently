@@ -5,11 +5,8 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Copy the permalink for a saved analysis.
- *
- * The URL is built in an effect rather than during render because it depends
- * on `window.location.origin`, which does not exist during the server pass —
- * reading it inline would hydrate mismatched.
+ * The URL is built in an effect because `window.location.origin` does not
+ * exist during the server pass and would hydrate mismatched.
  */
 export function ShareLink({ slug }: { slug: string }) {
   const [url, setUrl] = useState("");

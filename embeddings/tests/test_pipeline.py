@@ -183,6 +183,32 @@ def test_low_relevance_results_are_reported_as_inconclusive():
     assert "not about your" in v.summary
 
 
+def test_barely_relevant_results_with_no_coverage_are_inconclusive():
+    """
+    Regression: observed against the full index. A search-ranking method the
+    corpus should have engaged with returned a best relevance of 25 and an
+    entirely absent coverage matrix, and the old threshold reported that as
+    "Open field, 100/100" — a clearance built on evidence the assessor called
+    barely related.
+    """
+    elements = make_elements(4)
+    refs = [make_ref(f"R{i}", ["absent"] * 4, relevance=r, elements=elements)
+            for i, r in enumerate([25, 25, 20, 20], start=1)]
+    v = A._verdict(refs, elements, [], [e.id for e in elements])
+    assert v.conclusive is False
+    assert v.label == "Inconclusive"
+
+
+def test_relevant_but_uncovered_still_reads_as_open_field():
+    """The other side of the boundary: a genuinely on-topic reference that
+    teaches none of the elements is what real whitespace looks like."""
+    elements = make_elements(3)
+    refs = [make_ref("R1", ["absent"] * 3, relevance=65, elements=elements)]
+    v = A._verdict(refs, elements, [], [e.id for e in elements])
+    assert v.conclusive is True
+    assert v.label == "Open field"
+
+
 def test_empty_results_are_inconclusive_not_open_field():
     elements = make_elements(3)
     v = A._verdict([], elements, [], [e.id for e in elements])
@@ -308,7 +334,9 @@ def test_openai_payload_uses_modern_token_parameter_by_default():
     payload = llm._openai_payload("s", "u", {"type": "object"}, 4096)
     assert payload["max_completion_tokens"] == 4096
     assert "max_tokens" not in payload  # deprecated; rejected by reasoning models
-    assert payload["temperature"] == 0.1
+    # Zero, not merely low: both calls are schema-constrained extraction, so
+    # sampling only adds run-to-run drift to the verdict.
+    assert payload["temperature"] == 0.0
     assert payload["response_format"]["json_schema"]["strict"] is True
 
 

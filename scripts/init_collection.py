@@ -12,27 +12,9 @@ so it is worth catching here.
     --recreate   drop and rebuild (DESTROYS all indexed data)
     --finalize   re-enable HNSW building after a bulk load, then wait for green
 
-MEMORY BUDGET
--------------
-The whole reason this file is opinionated about storage: 258,935 BIGPATENT `g`
-abstracts at 1024 dims is 1.06 GB of raw float32 vectors, and the Qdrant Cloud
-free tier gives you 1 GB of RAM. The default configuration — vectors resident
-in memory — does not fit before payloads or the HNSW graph are counted.
-
-Three settings make it fit:
-
-  on_disk=True          the float32 originals are memory-mapped, not resident.
-  ScalarQuantization    an int8 copy (1024 B/vector, 265 MB total) is pinned in
-                        RAM with always_ram and is what actually serves search.
-                        4x compression; measured recall loss is negligible
-                        because rescoring reads the originals off disk.
-  on_disk_payload=True  abstracts live on disk, not the heap.
-
-That lands around 500-600 MB resident against a 1 GB cap, and ~1.5 GB of the
-4 GB disk. Without them the cluster OOMs partway through the load.
-
-Local embedded mode (QDRANT_PATH) ignores all three — it has no separate
-storage engine — so they cost nothing there and matter only in cloud mode.
+258,935 vectors at 1024 dims is 1.06 GB of float32 — over the Qdrant Cloud free
+tier's whole 1 GB of RAM. on_disk + int8 quantization + on_disk_payload bring
+that to ~500-600 MB resident and ~1.5 GB of disk. Local mode ignores all three.
 """
 
 import argparse
@@ -67,12 +49,8 @@ DEFAULT_INDEXING_THRESHOLD = 20_000
 
 def set_indexing_threshold(client, name: str, threshold: int) -> None:
     """
-    Control whether Qdrant builds the HNSW graph as points arrive.
-
-    During a quarter-million-point load on a 0.5 vCPU cluster, incremental
-    index building competes with the upserts for the only core there is.
-    Setting the threshold to 0 turns it off, the load runs at network speed,
-    and the graph is built once at the end by --finalize.
+    Set to 0 during a bulk load so index building doesn't compete with the
+    upserts for the only half-core there is; --finalize restores it.
     """
     client.update_collection(
         collection_name=name,
@@ -85,8 +63,18 @@ def finalize(client, name: str) -> None:
     info = client.get_collection(name)
     print(f"Collection '{name}': {info.points_count:,} points, "
           f"status={info.status}")
-    print(f"Restoring indexing_threshold to {DEFAULT_INDEXING_THRESHOLD:,}...")
-    set_indexing_threshold(client, name, DEFAULT_INDEXING_THRESHOLD)
+    threshold = DEFAULT_INDEXING_THRESHOLD
+    print(f"Restoring indexing_threshold to {threshold:,}...")
+    try:
+        set_indexing_threshold(client, name, threshold)
+    except Exception as exc:
+        # A slow cluster often applies the change then times out answering.
+        print(f"  (update call raised {type(exc).__name__}; checking whether it "
+              "applied anyway)")
+        current = client.get_collection(name).config.optimizer_config.indexing_threshold
+        if current != threshold:
+            raise
+        print("  it applied.")
 
     print("Building HNSW graph. On the free tier this takes a while — "
           "safe to Ctrl-C,\nthe build continues server-side.")
@@ -94,11 +82,21 @@ def finalize(client, name: str) -> None:
     while True:
         info = client.get_collection(name)
         mins = (time.time() - started) / 60
+        indexed = info.indexed_vectors_count or 0
+        total = info.points_count or 0
         print(f"  [{mins:5.1f} min] status={info.status} "
-              f"indexed={info.indexed_vectors_count or 0:,}/{info.points_count:,}",
-              flush=True)
-        if str(info.status).endswith("green"):
-            print(f"\nDone in {mins:.1f} min. Collection is ready to serve.")
+              f"indexed={indexed:,}/{total:,}", flush=True)
+
+        # Status alone is not the signal — a collection loaded with threshold 0
+        # sits at "green" with nothing indexed. Nor is indexed == total, which
+        # never happens: Qdrant leaves sub-threshold segments unindexed by
+        # design. So: green, with at most one small segment outstanding.
+        remainder = total - indexed
+        if total and indexed > 0 and remainder <= threshold \
+                and str(info.status).endswith("green"):
+            print(f"\nDone in {mins:.1f} min. {indexed:,} vectors in the HNSW "
+                  f"graph; {remainder:,} in a sub-threshold segment that Qdrant "
+                  "searches exhaustively by design.")
             return
         time.sleep(15)
 

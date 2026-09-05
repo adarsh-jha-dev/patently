@@ -110,24 +110,18 @@ class Verdict(BaseModel):
     top_relevance: int = 0
 
 
-# The sentinel a rubric field carries when the user explicitly said they don't
-# know. It is deliberately distinct from "" (not answered): an unanswered form
-# is incomplete, whereas "I don't know" is a legitimate, complete answer that
-# a novice must be able to give. Both are dropped before the prompt is built —
-# see render_rubric — so an unknown never becomes a wrong prior.
+# Distinct from "" (not answered): an unanswered form is incomplete, whereas
+# "I don't know" is a complete answer a novice must be able to give. Both are
+# dropped before the prompt is built.
 UNSURE = "unsure"
 
 
 class Rubric(BaseModel):
     """
-    Structured framing collected alongside the free-text description.
-
-    Every field here exists because it changes the search. `field` and
-    `context` set the terminology register the query angles are written in;
-    `kind` decides whether elements decompose as process steps or as
-    structural limitations; `prior_approach` supplies the closest-known-art
-    angle directly, which is the single hardest angle for the model to guess.
-    Nothing is collected merely to look thorough.
+    Structured framing collected alongside the free-text description. Every
+    field changes the search: field/context set the terminology, kind decides
+    whether elements decompose as steps or structure, and prior_approach
+    supplies the angle the model is least able to guess.
     """
 
     # No "mechanism" field: the free-text description already carries it, and
