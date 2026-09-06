@@ -61,6 +61,15 @@ COMBINATION_DISCOUNT = 0.85
 # threshold of 25, which reported the latter as "Open field, 100/100".
 MIN_CONCLUSIVE_RELEVANCE = 40
 
+# ...but relevance is a whole-document judgement, and a reference can be a poor
+# match overall while still teaching one element outright. Observed against the
+# full index: a touchscreen query returned 26 grounded coverage cells with
+# verbatim-verified quotes at a top relevance of 30, and reporting that as
+# "Inconclusive" hid real findings. Grounded evidence is therefore sufficient on
+# its own. Three cells rather than one, so a single incidental match does not
+# qualify.
+MIN_GROUNDED_CELLS = 3
+
 
 def _normalise(text: str) -> str:
     """Collapse whitespace and case so quote matching survives cosmetic drift."""
@@ -326,7 +335,14 @@ def _verdict(
     score = int(round(100 * (1 - exposure)))
 
     top_relevance = max((r.relevance for r in refs), default=0)
-    conclusive = bool(refs) and top_relevance >= MIN_CONCLUSIVE_RELEVANCE
+    # Quote-verified only: a demoted citation is not evidence the corpus engaged.
+    grounded = sum(
+        1 for r in refs for c in r.coverage
+        if c.level != "absent" and c.quote_verified
+    )
+    conclusive = bool(refs) and (
+        top_relevance >= MIN_CONCLUSIVE_RELEVANCE or grounded >= MIN_GROUNDED_CELLS
+    )
 
     if not conclusive:
         # Reporting "open field" here would be the single most damaging thing
@@ -335,7 +351,8 @@ def _verdict(
         reason = (
             "nothing was retrieved"
             if not refs
-            else f"the closest match scored only {top_relevance}/100 for relevance"
+            else f"the closest match scored only {top_relevance}/100 for "
+                 "relevance and nothing it teaches could be grounded in a quote"
         )
         return Verdict(
             novelty_score=score,

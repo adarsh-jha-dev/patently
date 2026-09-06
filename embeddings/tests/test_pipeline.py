@@ -199,6 +199,37 @@ def test_barely_relevant_results_with_no_coverage_are_inconclusive():
     assert v.label == "Inconclusive"
 
 
+def test_grounded_coverage_is_conclusive_even_at_low_relevance():
+    """
+    Regression, observed in the deployment rehearsal. Relevance is a
+    whole-document judgement; a reference can score low overall and still teach
+    an element outright. 26 grounded cells at top relevance 30 were being
+    reported as "Inconclusive", hiding real findings.
+    """
+    elements = make_elements(5)
+    refs = [
+        make_ref(f"R{i}", ["absent", "partial", "partial", "covered", "absent"],
+                 relevance=30, elements=elements)
+        for i in range(1, 6)
+    ]
+    v = A._verdict(refs, elements, [], [])
+    assert v.conclusive is True
+    assert v.label != "Inconclusive"
+
+
+def test_low_relevance_with_only_ungrounded_cells_stays_inconclusive():
+    """The other side: coverage that failed the quote check is not evidence."""
+    elements = make_elements(4)
+    refs = []
+    for i in range(1, 4):
+        r = make_ref(f"R{i}", ["partial"] * 4, relevance=20, elements=elements)
+        for c in r.coverage:
+            c.quote_verified = False
+        refs.append(r)
+    v = A._verdict(refs, elements, [], [])
+    assert v.conclusive is False
+
+
 def test_relevant_but_uncovered_still_reads_as_open_field():
     """The other side of the boundary: a genuinely on-topic reference that
     teaches none of the elements is what real whitespace looks like."""
