@@ -22,13 +22,22 @@ That rules out Vercel functions (250 MB), Cloudflare Workers, and most free
 containers (Render's free tier is 512 MB). The service needs ~2.5 GB of RAM and
 a container that stays warm enough to be useful.
 
-**Hugging Face Spaces, CPU Basic** is the recommendation: free, 2 vCPU, 16 GB
-RAM, native Docker, and the model already lives on their CDN. Caveat worth
-knowing — HF's pricing page lists CPU Basic as free but doesn't state
-unambiguously whether Docker Spaces run on it, so confirm when you create the
-Space. If it turns out to need a paid tier, **Google Cloud Run** is the fallback:
-scales to zero, generous free tier, 2 GB+ RAM available, same image, cold start
-in the 30-60s range because it pulls a ~3 GB image.
+**Hugging Face Spaces, Gradio SDK on CPU Basic**: free, 2 vCPU, 16 GB RAM, and
+the model already lives on their CDN.
+
+Docker Spaces require a paid plan — confirmed on the Space creation form, where
+the Docker SDK carries a "Paid" lock. The Gradio SDK is free on the same
+hardware, so `app.py` mounts the FastAPI service inside a Gradio app: the API
+routes stay at the root and the Space page renders at `/ui`. Nothing about the
+service changes.
+
+Offloading the embedding to HF's serverless Inference API would have made the
+service small enough for any free tier, but that is not available for this
+model: it is published as `fill-mask`, and the API refuses feature-extraction
+for it. The model has to be loaded in-process.
+
+`Dockerfile` remains the entrypoint for anywhere that takes containers — Cloud
+Run's free tier fits, at the cost of a 30-60s cold start pulling a ~3 GB image.
 
 ---
 
@@ -54,8 +63,11 @@ The table is created on first boot. There is no migration step.
 
 ## 3. The service → Hugging Face Space
 
-Create a **Docker** Space, then push this directory as its repo root — the
-frontmatter in `embeddings/README.md` supplies `sdk: docker` and `app_port`.
+Create a Space with **SDK: Gradio**, **hardware: CPU Basic (free)**. Do not pick
+Docker (paid) or ZeroGPU (for GPU Gradio demos, not a long-running API).
+
+Then push this directory as the Space repo root — the frontmatter in
+`embeddings/README.md` supplies `sdk: gradio` and `app_file: app.py`.
 
 ```bash
 # from the repo root
@@ -80,9 +92,9 @@ Then set these in **Settings → Variables and secrets**:
 **Do not set `QDRANT_PATH`.** It takes precedence over `QDRANT_URL` and would
 point the service at a local store that doesn't exist in the container.
 
-First build takes several minutes — it installs CPU-only torch and bakes the
-1.3 GB model into the image so cold starts are a disk read rather than a
-download. Confirm with:
+First build takes several minutes: `requirements.txt` pulls CPU-only torch via
+its extra index, and the 1.3 GB model downloads on first start. Caches go to
+`/tmp`, which is the only writable path on a Space. Confirm with:
 
 ```bash
 curl https://<user>-patently-service.hf.space/health

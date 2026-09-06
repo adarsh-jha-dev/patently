@@ -90,7 +90,7 @@ cp .env.example .env      # fill in GEMINI_API_KEY (or OPENAI_API_KEY)
 
 cd embeddings
 python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt   # requirements.txt is the runtime set only
 ```
 
 ### 1. Build an index
@@ -270,7 +270,7 @@ the API quota: **[DEPLOY.md](DEPLOY.md)**.
 cd embeddings && python -m pytest tests/ -q
 ```
 
-86 tests, no network and no API key required. They cover the parts that decide
+88 tests, no network and no API key required. They cover the parts that decide
 what a user is told — quote grounding, rank fusion, the §103 arithmetic, the
 inconclusive guard — plus the OpenAI transport, which is exercised against a
 local stand-in server so the path stays tested without a key.

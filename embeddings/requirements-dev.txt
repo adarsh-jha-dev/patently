@@ -1,0 +1,9 @@
+# Local development: the service, plus the offline indexing scripts and tests.
+-r requirements.txt
+
+pytest==9.1.1
+pytest-asyncio==1.4.0
+pyarrow==24.0.0
+huggingface_hub==0.36.2
+tqdm==4.67.3
+datasets==4.8.5

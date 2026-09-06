@@ -4,6 +4,10 @@ tests/
 __pycache__/
 *.pyc
 .python-version
-requirements.txt
+# Dev-only extras (pytest, datasets, pyarrow) — the image installs the runtime
+# set from requirements.txt, which must NOT be ignored.
+requirements-dev.txt
+app.py
+README.md
 Dockerfile
 .dockerignore

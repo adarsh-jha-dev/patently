@@ -3,8 +3,9 @@ title: Patently Service
 emoji: 🔍
 colorFrom: gray
 colorTo: blue
-sdk: docker
-app_port: 7860
+sdk: gradio
+sdk_version: 5.50.0
+app_file: app.py
 pinned: false
 ---
 
@@ -15,8 +16,13 @@ art analysis over an indexed patent corpus. The web front end talks to this;
 the browser never does.
 
 This directory doubles as a Hugging Face Space. The frontmatter above is what
-HF reads — `sdk: docker` builds the `Dockerfile` here, and `app_port: 7860`
-matches the port it listens on.
+HF reads: `app.py` mounts the FastAPI service and a small Gradio page, so the
+API lives at the root and the Space URL shows something useful at `/ui`.
+
+The Gradio SDK is used rather than Docker because Docker Spaces require a paid
+plan while Gradio on CPU Basic (2 vCPU, 16 GB) is free — ample for BERT-Large.
+The `Dockerfile` here is still the right entrypoint for anywhere that takes
+containers (Cloud Run, Fly, a VM); the two share the same service code.
 
 ## Routes
 

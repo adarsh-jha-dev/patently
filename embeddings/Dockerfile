@@ -27,8 +27,8 @@ RUN pip install --upgrade pip
 # then finally the source that actually changes between deploys.
 RUN pip install torch==2.12.0 --index-url https://download.pytorch.org/whl/cpu
 
-COPY requirements-service.txt .
-RUN pip install -r requirements-service.txt
+COPY requirements.txt .
+RUN pip install -r requirements.txt
 
 # Pre-fetch the weights. sentence-transformers wraps a plain BERT checkpoint
 # here, so this warns about creating a mean-pooling model — expected, and the
