@@ -27,7 +27,7 @@ async function fetchSaved(slug: string): Promise<Saved | null> {
   try {
     const res = await fetch(
       `${SERVICE_URL}/analyses/${encodeURIComponent(slug)}`,
-      { cache: "no-store" },
+      { cache: "no-store", signal: AbortSignal.timeout(20_000) },
     );
     if (!res.ok) return null;
     return (await res.json()) as Saved;

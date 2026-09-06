@@ -24,14 +24,15 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import time
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
-from patently import config
+from patently import config, ratelimit
 from patently.analyze import run_analysis
 from patently.db import Database
 from patently.llm import provider_status
@@ -91,13 +92,47 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Patently", lifespan=lifespan)
 
-# The Next.js app calls this service directly in development.
+# In production the browser never reaches this service — the Next.js app
+# proxies every call server-side — so this exists for local development and
+# for anyone pointing a browser tool at a deployed instance. Extra origins can
+# be added with PATENTLY_CORS_ORIGINS as a comma-separated list.
+_origins = ["http://localhost:3000", "http://127.0.0.1:3000"] + [
+    o.strip() for o in (os.getenv("PATENTLY_CORS_ORIGINS") or "").split(",") if o.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def _enforce_limits(request: Request) -> None:
+    """
+    Applied to the two endpoints that cost money.
+
+    Raises 429 with Retry-After rather than failing silently, so the UI can say
+    something truthful about when to come back.
+    """
+    key = ratelimit.client_key(request.headers, request.client.host if request.client else "?")
+    allowed, retry_after = ratelimit.analyses.check(key)
+    if not allowed:
+        raise HTTPException(
+            429,
+            f"Rate limit reached: {ratelimit.RATE_LIMIT} analyses per "
+            f"{ratelimit.RATE_WINDOW // 60} minutes. Try again in "
+            f"{retry_after // 60 + 1} minute(s).",
+            headers={"Retry-After": str(retry_after)},
+        )
+
+    within_budget, _ = ratelimit.budget.check()
+    if not within_budget:
+        raise HTTPException(
+            429,
+            "This demo's daily analysis budget is spent — it runs on a single "
+            "shared API key. It resets at 00:00 UTC.",
+            headers={"Retry-After": "3600"},
+        )
 
 
 async def _persist(app: FastAPI, req: AnalyzeRequest, payload: dict) -> str | None:
@@ -157,6 +192,12 @@ def health():
         "store_mode": app.state.store.mode if app.state.store else None,
         "indexed_points": points,
         "reasoning": provider_status(),
+        "limits": {
+            "per_client": ratelimit.RATE_LIMIT,
+            "window_seconds": ratelimit.RATE_WINDOW,
+            "daily_budget": ratelimit.DAILY_BUDGET,
+            "daily_used": ratelimit.budget.used,
+        },
     }
 
 
@@ -185,7 +226,8 @@ def search(req: SearchRequest):
 
 
 @app.post("/analyze", response_model=AnalyzeResult)
-async def analyze(req: AnalyzeRequest):
+async def analyze(req: AnalyzeRequest, request: Request):
+    _enforce_limits(request)
     store = _require_store(app)
     try:
         result = await run_analysis(
@@ -205,7 +247,7 @@ async def analyze(req: AnalyzeRequest):
 
 
 @app.post("/analyze/stream")
-async def analyze_stream(req: AnalyzeRequest):
+async def analyze_stream(req: AnalyzeRequest, request: Request):
     """
     Same pipeline, streamed as SSE.
 
@@ -214,6 +256,7 @@ async def analyze_stream(req: AnalyzeRequest):
     are how the user tells whether the system understood the invention before
     the results land.
     """
+    _enforce_limits(request)
     store = _require_store(app)
 
     async def gen():

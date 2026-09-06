@@ -223,6 +223,9 @@ The two APIs disagree in ways that would otherwise be your problem:
 | `GET /analyses` | recent saved analyses (newest first) |
 | `GET /analyses/{slug}` | one saved analysis, whole |
 
+`/analyze` is rate limited per client and per day — it costs two LLM calls
+against one shared key. `GET /health` reports the live budget.
+
 ## Saved analyses
 
 An analysis costs two model calls and 10-30s, and until now evaporated when the
@@ -240,13 +243,34 @@ are completely different claims, and a row that cannot tell them apart is not
 worth keeping. It is also what lets you re-run the same disclosure after a
 bigger index build and show the verdict move.
 
+## Deployment
+
+```
+browser ──► Vercel (Next.js) ──► Hugging Face Space (FastAPI + BERT-Large)
+                                        ├──► Qdrant Cloud
+                                        └──► Neon Postgres
+```
+
+The browser only talks to Vercel; every call to the Python service goes through
+a route handler or server component, so its URL and the API keys stay
+server-side.
+
+The service cannot be serverless: it loads BERT-Large, and the vectors already
+in Qdrant came from that model, so query vectors must too. That rules out
+Vercel functions and most free containers — it needs ~2.5 GB of RAM. The image
+installs CPU-only torch and bakes the 1.3 GB model in, so a cold start is a
+disk read rather than a download.
+
+Full runbook, including the limits that keep a public endpoint from draining
+the API quota: **[DEPLOY.md](DEPLOY.md)**.
+
 ## Tests
 
 ```bash
 cd embeddings && python -m pytest tests/ -q
 ```
 
-68 tests, no network and no API key required. They cover the parts that decide
+86 tests, no network and no API key required. They cover the parts that decide
 what a user is told — quote grounding, rank fusion, the §103 arithmetic, the
 inconclusive guard — plus the OpenAI transport, which is exercised against a
 local stand-in server so the path stays tested without a key.
@@ -264,6 +288,7 @@ and web UI.
 - [x] Multi-provider LLM support (Gemini / OpenAI)
 - [x] Guided rubric form, with "not sure" as a first-class answer
 - [x] Saved analyses with shareable permalinks
+- [x] Containerised service, rate limits, deployment runbook
 - [ ] Full 290k corpus indexed (currently partial)
 - [ ] Postgres metadata layer — real patent numbers, dates, assignees
 - [ ] Claim-text indexing (abstracts only today)
