@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useRef, useState } from "react";
 import { ArrowLeft, ScanSearch, TriangleAlert } from "lucide-react";
 import { RubricForm } from "@/components/RubricForm";
@@ -121,13 +122,15 @@ export function Analyzer({ corpusNote }: { corpusNote?: React.ReactNode }) {
       <header className="mb-10">
         <div className="mb-7 flex items-start justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <span
+            <Link href="/" aria-label="Patently home" className="flex items-center gap-2.5">
+              <span
               aria-hidden
-              className="grid size-8 place-items-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)]"
+              className="grid size-8 place-items-center rounded-lg bg-(--accent-soft) text-accent"
             >
               <ScanSearch size={18} strokeWidth={2} />
             </span>
             <span className="text-lg font-semibold tracking-tight">Patently</span>
+            </Link>
           </div>
           <ThemeToggle />
         </div>

@@ -26,13 +26,15 @@ export default function Landing() {
     <main className="mx-auto max-w-5xl px-5 sm:px-6">
       <nav className="flex items-center justify-between gap-4 py-6">
         <span className="flex items-center gap-2.5">
-          <span
-            aria-hidden
-            className="grid size-8 place-items-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)]"
-          >
-            <ScanSearch size={18} strokeWidth={2} />
-          </span>
-          <span className="text-lg font-semibold tracking-tight">Patently</span>
+          <Link href="/" aria-label="Patently home" className="flex items-center gap-2.5">
+            <span
+              aria-hidden
+              className="grid size-8 place-items-center rounded-lg bg-(--accent-soft) text-accent"
+            >
+              <ScanSearch size={18} strokeWidth={2} />
+            </span>
+            <span className="text-lg font-semibold tracking-tight">Patently</span>
+          </Link>
         </span>
         <span className="flex items-center gap-2">
           <Button variant="ghost" size="icon" asChild>
