@@ -138,7 +138,7 @@ export function References({ result }: { result: AnalyzeResult }) {
 
   return (
     <section className="rise">
-      <h2 className="mb-3 text-lg font-medium tracking-tight">
+      <h2 className="mb-3 text-xl font-semibold tracking-tight">
         References{" "}
         <span className="tnum font-normal text-[var(--text-faint)]">
           {result.references.length}
@@ -171,9 +171,32 @@ export function References({ result }: { result: AnalyzeResult }) {
                       {r.note}
                     </span>
                   )}
-                  <span className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-2xs text-[var(--text-faint)]">
+                  <span className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-2xs text-[var(--text-faint)]">
                     <span className="mono">{r.patent_id}</span>
-                    <span className="tnum">relevance {r.relevance}</span>
+                    {/* Relevance is a magnitude, so it gets a rail. The number
+                        stays beside it — the rail alone would be unreadable at
+                        this size, and colour is never the only encoding. */}
+                    <span className="inline-flex items-center gap-1.5">
+                      <span
+                        aria-hidden
+                        className="inline-block h-1 w-12 overflow-hidden rounded-full align-middle"
+                        style={{ background: "var(--none-tint)" }}
+                      >
+                        <span
+                          className="block h-full rounded-full"
+                          style={{
+                            width: `${Math.max(r.relevance, 2)}%`,
+                            background:
+                              r.relevance >= 60
+                                ? "var(--covered)"
+                                : r.relevance >= 35
+                                  ? "var(--partial)"
+                                  : "var(--none-ink)",
+                          }}
+                        />
+                      </span>
+                      <span className="tnum">relevance {r.relevance}</span>
+                    </span>
                     <span>found by {r.found_by.join(", ")}</span>
                   </span>
                 </span>
@@ -182,7 +205,7 @@ export function References({ result }: { result: AnalyzeResult }) {
                     <span
                       key={c.element_id}
                       title={`${byId.get(c.element_id)?.label}: ${LEVEL_META[c.level].label}`}
-                      className="text-2xs leading-none"
+                      className="text-sm leading-none"
                       style={{ color: `var(${LEVEL_META[c.level].varName})` }}
                     >
                       {LEVEL_META[c.level].glyph}

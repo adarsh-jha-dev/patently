@@ -67,7 +67,7 @@ export default async function SavedAnalysis({
       <header className="mb-8">
         <div className="mb-6 flex items-center justify-between gap-4">
           <Link
-            href="/"
+            href="/analyze"
             className="inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)] transition-colors hover:text-[var(--text)]"
           >
             <ArrowLeft size={15} strokeWidth={2} />

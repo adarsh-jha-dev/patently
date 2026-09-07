@@ -25,14 +25,18 @@
   --ring: rgba(47, 106, 176, 0.35);
   --shadow: 0 1px 2px rgba(24, 24, 20, 0.04), 0 4px 16px rgba(24, 24, 20, 0.05);
 
-  /* Status palette. Always paired with a glyph and a legend label, so state is
-     never carried by colour alone. */
-  --covered: #c0392b;
-  --covered-tint: rgba(192, 57, 43, 0.10);
-  --partial: #a06a06;
-  --partial-tint: rgba(224, 158, 20, 0.15);
-  --absent: #0a8f3c;
-  --absent-tint: rgba(10, 143, 60, 0.09);
+  /* Status palette, validated rather than chosen by eye.
+     The previous red/amber pair measured ΔE 2.6 under deuteranopia and 12.3
+     for normal vision — below the 15 floor, so even full-colour readers
+     struggled. These steps pass every check on a white surface.
+     Amber sits at 2.27:1 contrast, which obliges the visible labels and
+     legend that every chart and cell here carries. */
+  --covered: #b42318;
+  --covered-tint: rgba(180, 35, 24, 0.10);
+  --partial: #d9a406;
+  --partial-tint: rgba(217, 164, 6, 0.16);
+  --absent: #087a33;
+  --absent-tint: rgba(8, 122, 51, 0.10);
   --none-ink: #b3b2ab;
   --none-tint: rgba(24, 24, 20, 0.035);
 }
@@ -51,12 +55,14 @@
   --ring: rgba(127, 176, 232, 0.40);
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 20px rgba(0, 0, 0, 0.30);
 
-  --covered: #ef8079;
-  --covered-tint: rgba(239, 128, 121, 0.16);
-  --partial: #f0b429;
-  --partial-tint: rgba(240, 180, 41, 0.15);
-  --absent: #4ad07a;
-  --absent-tint: rgba(74, 208, 122, 0.13);
+  /* Dark steps are chosen for the dark band (OKLCH L 0.48–0.67), not flipped
+     from light — the usual pastel choices sit well above it. */
+  --covered: #cf4d42;
+  --covered-tint: rgba(207, 77, 66, 0.18);
+  --partial: #bd8a1e;
+  --partial-tint: rgba(189, 138, 30, 0.18);
+  --absent: #3aa85e;
+  --absent-tint: rgba(58, 168, 94, 0.16);
   --none-ink: #5b5a55;
   --none-tint: rgba(255, 255, 255, 0.045);
 }

@@ -2,6 +2,7 @@
 
 import { VerdictPanel } from "@/components/Verdict";
 import { CoverageMatrix } from "@/components/CoverageMatrix";
+import { ElementCoverage } from "@/components/ElementCoverage";
 import { Angles, Combinations, References, Whitespace } from "@/components/Findings";
 import type { AnalyzeResult } from "@/lib/types";
 
@@ -20,6 +21,7 @@ export function Report({
   return (
     <div className="space-y-8">
       <VerdictPanel result={result} />
+      <ElementCoverage result={result} />
       <CoverageMatrix result={result} />
       <div className="grid items-start gap-4 md:grid-cols-2">
         <Whitespace result={result} />

@@ -1,4 +1,5 @@
 import type { AnalyzeResult } from "@/lib/types";
+import { Card } from "@/components/ui/card";
 
 /**
  * The headline. A hero number plus one thin meter — no gauge, no dial.
@@ -23,7 +24,7 @@ export function VerdictPanel({ result }: { result: AnalyzeResult }) {
         : "--covered";
 
   return (
-    <section className="rise rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6">
+    <Card className="rise p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-6">
         <div className="min-w-0 flex-1">
           <span className="eyebrow">Assessment</span>
@@ -71,11 +72,13 @@ export function VerdictPanel({ result }: { result: AnalyzeResult }) {
           label="Closest single reference"
           value={`${Math.round(verdict.anticipation_risk * 100)}%`}
           hint="§102 anticipation"
+          fraction={verdict.anticipation_risk}
         />
         <Stat
           label="Best two-reference combo"
           value={`${Math.round(verdict.combination_risk * 100)}%`}
           hint="§103 obviousness"
+          fraction={verdict.combination_risk}
         />
         <Stat
           label="Untouched elements"
@@ -96,7 +99,7 @@ export function VerdictPanel({ result }: { result: AnalyzeResult }) {
           passage could not be located verbatim in the source abstract.
         </p>
       )}
-    </section>
+    </Card>
   );
 }
 
@@ -104,10 +107,14 @@ function Stat({
   label,
   value,
   hint,
+  fraction,
 }: {
   label: string;
   value: string;
   hint: string;
+  /** When present, draws a magnitude rail so two stats can be compared by eye
+   *  rather than by reading two numbers and doing the subtraction. */
+  fraction?: number;
 }) {
   return (
     <div>
@@ -115,7 +122,27 @@ function Stat({
       <dd className="tnum mt-0.5 text-xl font-medium tracking-tight">
         {value}
       </dd>
-      <dd className="text-2xs text-[var(--text-faint)]">{hint}</dd>
+      {typeof fraction === "number" && (
+        <dd
+          aria-hidden
+          className="mt-1.5 h-1 w-full overflow-hidden rounded-full"
+          style={{ background: "var(--none-tint)" }}
+        >
+          <div
+            className="h-full rounded-full transition-[width] duration-700 ease-out"
+            style={{
+              width: `${Math.max(fraction * 100, 1.5)}%`,
+              background:
+                fraction >= 0.6
+                  ? "var(--covered)"
+                  : fraction >= 0.3
+                    ? "var(--partial)"
+                    : "var(--absent)",
+            }}
+          />
+        </dd>
+      )}
+      <dd className="mt-1 text-2xs text-[var(--text-faint)]">{hint}</dd>
     </div>
   );
 }
