@@ -63,6 +63,8 @@ The table is created on first boot. There is no migration step.
 
 ## 3. The service → Cloud Run
 
+> **Live:** https://patently-service-136023854508.asia-south1.run.app
+
 Install the CLI (`brew install --cask google-cloud-sdk`), then:
 
 ```bash
@@ -125,7 +127,7 @@ Import the repo, then:
 |---|---|
 | Root directory | `web` |
 | Framework | Next.js (auto-detected) |
-| Env var `EMBEDDINGS_URL` | the Cloud Run service URL |
+| Env var `EMBEDDINGS_URL` | `https://patently-service-136023854508.asia-south1.run.app` |
 
 That's the whole configuration. `maxDuration` is set to 60s in the analyze
 route, which fits Vercel's Hobby ceiling and a 12-30s analysis.
