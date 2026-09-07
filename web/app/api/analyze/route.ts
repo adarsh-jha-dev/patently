@@ -30,7 +30,13 @@ export async function POST(req: NextRequest) {
   try {
     upstream = await fetch(`${SERVICE_URL}/analyze/stream`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        // Forward the caller's address. Without this the service sees only
+        // this proxy's egress IP, so its per-client rate limit collapses into
+        // a single global bucket and the sixth visitor in an hour is refused.
+        ...forwardedFor(req),
+      },
       body,
       signal: abort,
     });
@@ -65,6 +71,14 @@ export async function POST(req: NextRequest) {
       Connection: "keep-alive",
     },
   });
+}
+
+/** The original client address, as the platform reported it to us. */
+function forwardedFor(req: NextRequest): Record<string, string> {
+  const chain = req.headers.get("x-forwarded-for");
+  const direct = req.headers.get("x-real-ip");
+  const client = chain?.split(",")[0]?.trim() || direct?.trim();
+  return client ? { "X-Forwarded-For": client } : {};
 }
 
 /** FastAPI wraps errors as {"detail": "..."}; show that rather than raw JSON. */
