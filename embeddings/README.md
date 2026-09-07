@@ -1,28 +1,12 @@
----
-title: Patently Service
-emoji: 🔍
-colorFrom: gray
-colorTo: blue
-sdk: gradio
-sdk_version: 5.50.0
-app_file: app.py
-pinned: false
----
-
 # Patently — retrieval + analysis service
 
 The Python half of [Patently](https://github.com/adarsh-jha-dev/patently): prior
 art analysis over an indexed patent corpus. The web front end talks to this;
 the browser never does.
 
-This directory doubles as a Hugging Face Space. The frontmatter above is what
-HF reads: `app.py` mounts the FastAPI service and a small Gradio page, so the
-API lives at the root and the Space URL shows something useful at `/ui`.
-
-The Gradio SDK is used rather than Docker because Docker Spaces require a paid
-plan while Gradio on CPU Basic (2 vCPU, 16 GB) is free — ample for BERT-Large.
-The `Dockerfile` here is still the right entrypoint for anywhere that takes
-containers (Cloud Run, Fly, a VM); the two share the same service code.
+Deployed as a container — see the `Dockerfile` here and `DEPLOY.md` at the repo
+root. It loads BERT-Large in-process because the vectors already in Qdrant came
+from that model, so query vectors must too.
 
 ## Routes
 
@@ -72,7 +56,7 @@ Or via the image, which is what gets deployed:
 
 ```bash
 docker build -t patently-service .
-docker run -p 7860:7860 --env-file ../.env patently-service
+docker run -p 8080:8080 -e PORT=8080 --env-file ../.env patently-service
 ```
 
 ## Limits

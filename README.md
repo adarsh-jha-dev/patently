@@ -257,9 +257,10 @@ server-side.
 
 The service cannot be serverless: it loads BERT-Large, and the vectors already
 in Qdrant came from that model, so query vectors must too. That rules out
-Vercel functions and most free containers — it needs ~2.5 GB of RAM. The image
-installs CPU-only torch and bakes the 1.3 GB model in, so a cold start is a
-disk read rather than a download.
+Vercel functions. The image installs CPU-only torch and bakes the 1.3 GB model
+in, so a cold start is a disk read rather than a download; measured resident
+memory is ~580 MB, since the weights are memory-mapped rather than fully
+loaded.
 
 Full runbook, including the limits that keep a public endpoint from draining
 the API quota: **[DEPLOY.md](DEPLOY.md)**.

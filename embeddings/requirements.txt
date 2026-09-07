@@ -1,28 +1,24 @@
-# Runtime dependencies. Hugging Face Spaces installs this file by name, so it
-# must be the deployable set — not the development freeze, which pulls in
-# datasets, pyarrow and pytest for the offline indexing scripts and tests.
+# Runtime dependencies for the deployed service. requirements-dev.txt adds the
+# test suite and the offline indexing scripts on top of this.
 #
-# torch is pinned per platform. With a bare `torch==2.12.0` pip may resolve the
-# PyPI wheel, which bundles CUDA kernels for a box that has no GPU — roughly
-# 2 GB and a much longer Space build. The `+cpu` build only exists for Linux;
-# macOS wheels are CPU/MPS already and have no such variant.
+# torch is pinned per platform. A bare `torch==2.12.0` lets pip resolve the
+# PyPI wheel, which bundles CUDA kernels for a box with no GPU — roughly 2 GB
+# and a much longer build. The `+cpu` build exists only for Linux; macOS wheels
+# are CPU/MPS already and have no such variant.
 
 --extra-index-url https://download.pytorch.org/whl/cpu
 
 torch==2.12.0+cpu ; sys_platform == "linux"
 torch==2.12.0 ; sys_platform != "linux"
+
 sentence-transformers==4.1.0
 transformers==4.57.6
 
 fastapi==0.136.3
 uvicorn==0.48.0
-# Capped by gradio, which the Space SDK requires: 5.50.0 allows <=2.12.3.
-pydantic==2.12.3
+pydantic==2.13.4
 python-dotenv==1.2.2
 httpx==0.28.1
 
 qdrant-client==1.18.0
 asyncpg==0.31.0
-
-# Only the Space entrypoint imports this; the service itself does not.
-gradio==5.50.0

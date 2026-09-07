@@ -4,10 +4,10 @@ tests/
 __pycache__/
 *.pyc
 .python-version
-# Dev-only extras (pytest, datasets, pyarrow) — the image installs the runtime
-# set from requirements.txt, which must NOT be ignored.
 requirements-dev.txt
-app.py
-README.md
 Dockerfile
 .dockerignore
+# app.py and README.md are deliberately NOT excluded. Hugging Face builds Gradio
+# Spaces with Docker and honours this file, so excluding app.py here removed the
+# Space's entrypoint from its build context — the container started and reported
+# "can't open file '/home/user/app/app.py'" while the file sat in the repo.

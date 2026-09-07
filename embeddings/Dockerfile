@@ -1,8 +1,5 @@
 # Patently retrieval + analysis service.
 #
-# Only needed where the deployment takes containers (Cloud Run, Fly, a VM). The
-# Hugging Face Space uses the Gradio SDK and `app.py` instead, because Docker
-# Spaces require a paid plan.
 #
 # The model is baked in: bert-for-patents is 1.3 GB, and downloading it on
 # first request means paying that on every cold start and failing outright when
@@ -52,8 +49,9 @@ SentenceTransformer('${EMBED_MODEL}')" \
 COPY --chown=patently:patently main.py ./
 COPY --chown=patently:patently patently ./patently
 
-# Spaces route to 7860; Cloud Run and Fly inject $PORT. Both are honoured.
-ENV PORT=7860
-EXPOSE 7860
+# Cloud Run injects $PORT (8080 by default) and ignores EXPOSE; the default here
+# only matters for a bare `docker run`.
+ENV PORT=8080
+EXPOSE 8080
 
 CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT}"]
