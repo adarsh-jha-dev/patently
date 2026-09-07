@@ -4,6 +4,8 @@ import { motion } from "motion/react";
 import { ArrowRight, Check } from "lucide-react";
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   ChoiceAnswer,
   FieldShell,
@@ -123,7 +125,7 @@ export function RubricForm({
     <div className="pb-28">
       {/* Description first: it carries the mechanism, and everything the
           rubric collects only qualifies it. */}
-      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
+      <Card className="p-5 sm:p-6">
         <div className="mb-2.5 flex flex-wrap items-center gap-1.5">
           <span
             aria-hidden
@@ -134,7 +136,7 @@ export function RubricForm({
                 : "bg-[var(--border-strong)]",
             )}
           />
-          <span className="text-[13px] font-medium">Describe your invention</span>
+          <span className="text-sm font-medium">Describe your invention</span>
         </div>
         <textarea
           value={description}
@@ -155,16 +157,16 @@ export function RubricForm({
           rows={6}
           disabled={running}
           placeholder="What does it do, and how? Plain English is fine — the more specific the mechanism, the sharper the search."
-          className="w-full resize-none rounded-lg border border-[var(--border)] bg-[var(--bg)] p-3 text-[14px] leading-relaxed outline-none transition-colors placeholder:text-[var(--text-faint)] focus:border-[var(--border-strong)] disabled:opacity-60"
+          className="w-full resize-none rounded-lg border border-[var(--border)] bg-[var(--bg)] p-3.5 text-base leading-relaxed outline-none transition-colors placeholder:text-[var(--text-faint)] focus:border-[var(--border-strong)] disabled:opacity-60"
         />
         <div className="mt-1.5 flex items-center justify-between gap-3">
-          <span className="tnum text-[11px] text-[var(--text-faint)]">
+          <span className="tnum text-2xs text-[var(--text-faint)]">
             {description.trim().length} characters
             {descriptionShort && ` · need at least ${MIN_DESCRIPTION}`}
           </span>
           {!running && (
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[11px] text-[var(--text-faint)]">
+              <span className="text-2xs text-[var(--text-faint)]">
                 Fill an example:
               </span>
               {EXAMPLES.map((ex) => (
@@ -172,7 +174,7 @@ export function RubricForm({
                   key={ex.label}
                   type="button"
                   onClick={() => applyExample(ex)}
-                  className="rounded-full border border-[var(--border)] px-2.5 py-1 text-[11px] text-[var(--text-muted)] transition-colors hover:border-[var(--border-strong)] hover:text-[var(--text)]"
+                  className="rounded-full border border-[var(--border)] px-2.5 py-1 text-2xs text-[var(--text-muted)] transition-colors hover:border-[var(--border-strong)] hover:text-[var(--text)]"
                 >
                   {ex.label}
                 </button>
@@ -180,7 +182,7 @@ export function RubricForm({
             </div>
           )}
         </div>
-      </section>
+      </Card>
 
       {SECTIONS.map((section, i) => {
         const done = sectionAnswered(section, values);
@@ -195,20 +197,20 @@ export function RubricForm({
               delay: 0.04 * i,
               ease: [0.22, 1, 0.36, 1],
             }}
-            className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5"
+            className="themed mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6"
           >
             <header className="mb-1 flex items-baseline justify-between gap-4 border-b border-[var(--border)] pb-3">
               <div>
-                <h2 className="text-[13.5px] font-medium tracking-tight">
+                <h2 className="text-lg font-semibold tracking-tight">
                   {section.title}
                 </h2>
-                <p className="mt-0.5 text-[12px] text-[var(--text-muted)]">
+                <p className="mt-0.5 text-xs text-[var(--text-muted)]">
                   {section.caption}
                 </p>
               </div>
               <span
                 className={cn(
-                  "tnum inline-flex shrink-0 items-center gap-1 text-[11px]",
+                  "tnum inline-flex shrink-0 items-center gap-1 text-2xs",
                   full ? "text-[var(--accent)]" : "text-[var(--text-faint)]",
                 )}
               >
@@ -255,10 +257,10 @@ export function RubricForm({
         <div className="mx-auto flex max-w-4xl items-center gap-4 px-6 py-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline gap-2">
-              <span className="tnum text-[12px] font-medium">
+              <span className="tnum text-xs font-medium">
                 {status.answered}/{status.total}
               </span>
-              <span className="truncate text-[11.5px] text-[var(--text-faint)]">
+              <span className="truncate text-2xs text-[var(--text-faint)]">
                 {status.complete
                   ? known === ALL_FIELDS.length
                     ? "Every question answered."
@@ -277,24 +279,20 @@ export function RubricForm({
           </div>
 
           {status.answered > 0 && !running && (
-            <button
-              type="button"
-              onClick={onReset}
-              className="shrink-0 text-[12px] text-[var(--text-faint)] transition-colors hover:text-[var(--text)]"
-            >
+            <Button variant="ghost" size="sm" onClick={onReset} className="shrink-0">
               Clear
-            </button>
+            </Button>
           )}
 
-          <button
-            type="button"
+          <Button
+            size="md"
             onClick={onSubmit}
             disabled={running || !status.complete}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-[var(--text)] px-4 py-2 text-[13px] font-medium text-[var(--bg)] transition-opacity disabled:opacity-25"
+            className="shrink-0"
           >
             {running ? "Analyzing…" : "Analyze"}
-            {!running && <ArrowRight size={14} strokeWidth={2} />}
-          </button>
+            {!running && <ArrowRight size={16} strokeWidth={2} />}
+          </Button>
         </div>
       </div>
     </div>

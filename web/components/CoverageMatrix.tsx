@@ -42,10 +42,10 @@ export function CoverageMatrix({ result }: { result: AnalyzeResult }) {
     <section className="rise">
       <header className="mb-3 flex items-baseline justify-between gap-4">
         <div>
-          <h2 className="text-[15px] font-medium tracking-tight">
+          <h2 className="text-lg font-medium tracking-tight">
             Coverage map
           </h2>
-          <p className="mt-0.5 text-[13px] text-[var(--text-muted)]">
+          <p className="mt-0.5 text-sm text-[var(--text-muted)]">
             Which references teach which parts of your invention.
           </p>
         </div>
@@ -53,7 +53,7 @@ export function CoverageMatrix({ result }: { result: AnalyzeResult }) {
       </header>
 
       <div className="overflow-x-auto rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-        <table className="w-full border-collapse text-[13px]">
+        <table className="w-full border-collapse text-sm">
           <thead>
             <tr>
               <th className="sticky left-0 z-10 min-w-[220px] bg-[var(--surface)] p-3 text-left align-bottom">
@@ -65,7 +65,7 @@ export function CoverageMatrix({ result }: { result: AnalyzeResult }) {
                   className="p-2 pb-3 text-center align-bottom"
                   title={r.title}
                 >
-                  <span className="mono text-[11px] text-[var(--text-muted)]">
+                  <span className="mono text-2xs text-[var(--text-muted)]">
                     {r.ref_id}
                   </span>
                 </th>
@@ -84,10 +84,10 @@ export function CoverageMatrix({ result }: { result: AnalyzeResult }) {
                     i % 2 ? "bg-[var(--surface-sunk)]" : "bg-[var(--surface)]"
                   }`}
                 >
-                  <span className="mono mr-2 text-[11px] text-[var(--text-faint)]">
+                  <span className="mono mr-2 text-2xs text-[var(--text-faint)]">
                     {e.id}
                   </span>
-                  <span className="text-[13px]">{e.label}</span>
+                  <span className="text-sm">{e.label}</span>
                 </th>
                 {references.map((r) => {
                   const level = cell(e.id, r.ref_id);
@@ -128,15 +128,15 @@ export function CoverageMatrix({ result }: { result: AnalyzeResult }) {
 
       {/* Evidence panel: fixed height so hovering the grid never reflows the
           page underneath it. */}
-      <div className="mt-2 min-h-[68px] rounded-lg border border-dashed border-[var(--border)] px-4 py-3 text-[13px]">
+      <div className="mt-2 min-h-[68px] rounded-lg border border-dashed border-[var(--border)] px-4 py-3 text-sm">
         {active && activeElement ? (
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="mono text-[11px] text-[var(--text-faint)]">
+              <span className="mono text-2xs text-[var(--text-faint)]">
                 {hover?.r} × {activeElement.id}
               </span>
               <span
-                className="rounded px-1.5 py-0.5 text-[11px] font-medium"
+                className="rounded px-1.5 py-0.5 text-2xs font-medium"
                 style={{
                   background: `var(${LEVEL_META[active.level].tint})`,
                   color: `var(${LEVEL_META[active.level].varName})`,
@@ -145,7 +145,7 @@ export function CoverageMatrix({ result }: { result: AnalyzeResult }) {
                 {LEVEL_META[active.level].glyph} {LEVEL_META[active.level].label}
               </span>
               {!active.quote_verified && (
-                <span className="text-[11px] text-[var(--text-faint)]">
+                <span className="text-2xs text-[var(--text-faint)]">
                   quote unverified — finding downgraded
                 </span>
               )}
@@ -172,7 +172,7 @@ export function CoverageMatrix({ result }: { result: AnalyzeResult }) {
 
 function Legend() {
   return (
-    <div className="flex shrink-0 items-center gap-3 text-[11px] text-[var(--text-muted)]">
+    <div className="flex shrink-0 items-center gap-3 text-2xs text-[var(--text-muted)]">
       {(["covered", "partial", "absent"] as const).map((k) => (
         <span key={k} className="flex items-center gap-1.5">
           <span style={{ color: `var(${LEVEL_META[k].varName})` }}>

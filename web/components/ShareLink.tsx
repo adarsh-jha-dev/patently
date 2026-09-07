@@ -45,13 +45,13 @@ export function ShareLink({ slug }: { slug: string }) {
         value={url}
         onFocus={(e) => e.currentTarget.select()}
         aria-label="Permalink to this analysis"
-        className="mono min-w-0 flex-1 bg-transparent text-[11.5px] text-[var(--text-muted)] outline-none"
+        className="mono min-w-0 flex-1 bg-transparent text-2xs text-[var(--text-muted)] outline-none"
       />
       <button
         type="button"
         onClick={copy}
         className={cn(
-          "inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-[11.5px] font-medium transition-colors",
+          "inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-2xs font-medium transition-colors",
           copied
             ? "text-[var(--absent)]"
             : "text-[var(--text-muted)] hover:text-[var(--text)]",

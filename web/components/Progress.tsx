@@ -36,7 +36,7 @@ export function Progress({
             return (
               <li
                 key={s.key}
-                className="flex items-center gap-3 text-[13px]"
+                className="flex items-center gap-3 text-sm"
                 style={{
                   color: done
                     ? "var(--text-muted)"
@@ -65,13 +65,13 @@ export function Progress({
       {plan && (
         <div className="rise rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
           <span className="eyebrow">Claim elements</span>
-          <p className="mt-1.5 text-[13px] text-[var(--text-muted)]">
+          <p className="mt-1.5 text-sm text-[var(--text-muted)]">
             {plan.restatement}
           </p>
           <ul className="mt-3 space-y-1.5">
             {plan.elements.map((e) => (
-              <li key={e.id} className="text-[13px]">
-                <span className="mono mr-2 text-[11px] text-[var(--text-faint)]">
+              <li key={e.id} className="text-sm">
+                <span className="mono mr-2 text-2xs text-[var(--text-faint)]">
                   {e.id}
                 </span>
                 <span className="font-medium">{e.label}</span>

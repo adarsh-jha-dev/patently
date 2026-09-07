@@ -3,6 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import { Report } from "@/components/Report";
 import { ShareLink } from "@/components/ShareLink";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import type { AnalyzeResult } from "@/lib/types";
 
 /** A saved analysis, by slug. Fetched server-side so it renders on first
@@ -62,19 +63,22 @@ export default async function SavedAnalysis({
   });
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-14 sm:py-20">
+    <main className="mx-auto max-w-4xl px-5 py-10 sm:px-6 sm:py-16">
       <header className="mb-8">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-[12px] text-[var(--text-muted)] transition-colors hover:text-[var(--text)]"
-        >
-          <ArrowLeft size={13} strokeWidth={2} />
-          New analysis
-        </Link>
-        <h1 className="mt-4 text-[15px] font-medium tracking-tight">
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)] transition-colors hover:text-[var(--text)]"
+          >
+            <ArrowLeft size={15} strokeWidth={2} />
+            New analysis
+          </Link>
+          <ThemeToggle />
+        </div>
+        <h1 className="text-2xl font-semibold tracking-tight">
           Saved analysis
         </h1>
-        <p className="mt-1 text-[12px] text-[var(--text-faint)]">
+        <p className="mt-1.5 text-sm text-[var(--text-faint)]">
           Run {when} · {saved.model}
         </p>
       </header>
@@ -83,11 +87,11 @@ export default async function SavedAnalysis({
         <ShareLink slug={saved.slug} />
       </div>
 
-      <details className="mb-8 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
-        <summary className="cursor-pointer text-[12.5px] font-medium">
+      <details className="themed mb-8 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
+        <summary className="cursor-pointer text-sm font-medium">
           The disclosure as submitted
         </summary>
-        <p className="mt-3 whitespace-pre-wrap text-[13px] leading-relaxed text-[var(--text-muted)]">
+        <p className="mt-3 whitespace-pre-wrap text-base leading-relaxed text-[var(--text-muted)]">
           {saved.description}
         </p>
       </details>

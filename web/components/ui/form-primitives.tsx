@@ -44,7 +44,7 @@ export function Help({ text }: { text: string }) {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="basis-full overflow-hidden text-[12px] leading-relaxed text-[var(--text-muted)]"
+            className="basis-full overflow-hidden text-xs leading-relaxed text-[var(--text-muted)]"
           >
             <span className="block pt-1.5">{text}</span>
           </motion.p>
@@ -75,7 +75,7 @@ export function FieldShell({
             answered ? "bg-[var(--accent)]" : "bg-[var(--border-strong)]",
           )}
         />
-        <span className="text-[13px] font-medium">{label}</span>
+        <span className="text-base font-medium">{label}</span>
         <Help text={help} />
       </div>
       {children}
@@ -87,7 +87,7 @@ export function FieldShell({
  *  two read as the same class of thing. */
 const chip = (selected: boolean, dashed = false) =>
   cn(
-    "rounded-full px-3 py-1.5 text-[12.5px] transition-all duration-150",
+    "rounded-full px-3.5 py-2 text-xs transition-all duration-150",
     "border focus-visible:outline-2 focus-visible:outline-offset-2",
     dashed ? "border-dashed" : "border-solid",
     selected
@@ -168,7 +168,7 @@ export function TextAnswer({
           disabled={disabled || isUnsure}
           rows={rows}
           placeholder={isUnsure ? "" : placeholder}
-          className="w-full resize-none bg-transparent p-3 text-[13.5px] leading-relaxed outline-none placeholder:text-[var(--text-faint)] disabled:cursor-not-allowed"
+          className="w-full resize-none bg-transparent p-3.5 text-sm leading-relaxed outline-none placeholder:text-[var(--text-faint)] disabled:cursor-not-allowed"
         />
       </div>
       <button
@@ -176,7 +176,7 @@ export function TextAnswer({
         onClick={() => onChange(isUnsure ? "" : UNSURE)}
         disabled={disabled}
         className={cn(
-          "mt-1.5 inline-flex items-center gap-1 rounded-full border border-dashed px-2.5 py-1 text-[11.5px] transition-colors",
+          "mt-1.5 inline-flex items-center gap-1 rounded-full border border-dashed px-2.5 py-1 text-2xs transition-colors",
           isUnsure
             ? "border-[var(--accent)] bg-[var(--accent)]/10 font-medium text-[var(--text)]"
             : "border-[var(--border)] text-[var(--text-faint)] hover:border-[var(--border-strong)] hover:text-[var(--text-muted)]",

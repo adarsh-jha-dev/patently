@@ -28,7 +28,7 @@ export function Report({
       <References result={result} />
       <Angles result={result} />
 
-      <footer className="border-t border-[var(--border)] pt-5 text-[11px] leading-relaxed text-[var(--text-faint)]">
+      <footer className="border-t border-[var(--border)] pt-5 text-2xs leading-relaxed text-[var(--text-faint)]">
         <p>
           {result.stats.llm_calls} model calls · {result.stats.pool} patents
           reached · {result.stats.assessed} assessed

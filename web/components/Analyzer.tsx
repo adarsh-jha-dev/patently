@@ -1,11 +1,13 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ScanSearch, TriangleAlert } from "lucide-react";
 import { RubricForm } from "@/components/RubricForm";
 import { Progress } from "@/components/Progress";
 import { Report } from "@/components/Report";
 import { ShareLink } from "@/components/ShareLink";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { Button } from "@/components/ui/button";
 import { EMPTY_RUBRIC, type RubricValues } from "@/lib/rubric";
 import type { AnalyzeResult, Plan } from "@/lib/types";
 
@@ -115,13 +117,28 @@ export function Analyzer({ corpusNote }: { corpusNote?: React.ReactNode }) {
   }, [text, rubric]);
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-14 sm:py-20">
-      <header className="mb-8">
-        <h1 className="text-[15px] font-medium tracking-tight">Patently</h1>
-        <p className="mt-1 max-w-xl text-[14px] leading-relaxed text-[var(--text-muted)]">
-          Describe an invention. Get back which parts of it the prior art
-          already teaches — element by element, with the passage behind every
-          finding.
+    <main className="mx-auto max-w-4xl px-5 py-10 sm:px-6 sm:py-16">
+      <header className="mb-10">
+        <div className="mb-7 flex items-start justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <span
+              aria-hidden
+              className="grid size-8 place-items-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)]"
+            >
+              <ScanSearch size={18} strokeWidth={2} />
+            </span>
+            <span className="text-lg font-semibold tracking-tight">Patently</span>
+          </div>
+          <ThemeToggle />
+        </div>
+
+        <h1 className="max-w-2xl text-2xl font-semibold tracking-tight">
+          Which parts of your invention does the prior art already teach?
+        </h1>
+        <p className="mt-3 max-w-2xl text-lg leading-relaxed text-[var(--text-muted)]">
+          Describe it in plain English. You get back a claim-element map — each
+          finding backed by a passage quoted verbatim from the patent it came
+          from.
         </p>
         {corpusNote}
       </header>
@@ -129,13 +146,19 @@ export function Analyzer({ corpusNote }: { corpusNote?: React.ReactNode }) {
       {error && (
         <div
           role="alert"
-          className="mb-6 rounded-lg border px-4 py-3 text-[13px]"
+          className="mb-6 flex items-start gap-3 rounded-xl border px-4 py-3.5 text-sm leading-relaxed"
           style={{
             borderColor: "var(--covered)",
             background: "var(--covered-tint)",
           }}
         >
-          {error}
+          <TriangleAlert
+            size={17}
+            strokeWidth={2}
+            className="mt-0.5 shrink-0"
+            style={{ color: "var(--covered)" }}
+          />
+          <span>{error}</span>
         </div>
       )}
 
@@ -158,14 +181,10 @@ export function Analyzer({ corpusNote }: { corpusNote?: React.ReactNode }) {
       {!running && result && (
         <div className="space-y-8">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={backToForm}
-              className="inline-flex items-center gap-1.5 text-[12px] text-[var(--text-muted)] transition-colors hover:text-[var(--text)]"
-            >
-              <ArrowLeft size={13} strokeWidth={2} />
+            <Button variant="ghost" size="sm" onClick={backToForm}>
+              <ArrowLeft size={15} strokeWidth={2} />
               Back to the form
-            </button>
+            </Button>
           </div>
 
           {/* Only offered when the analysis was actually filed — a link that

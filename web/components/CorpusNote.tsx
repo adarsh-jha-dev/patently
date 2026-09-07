@@ -40,7 +40,7 @@ export async function CorpusNote() {
   if (!points || points < 0) return null;
 
   return (
-    <p className="mt-3 text-[12px] leading-relaxed text-[var(--text-faint)]">
+    <p className="mt-3 text-xs leading-relaxed text-[var(--text-faint)]">
       Searching <span className="tnum">{points.toLocaleString()}</span> US patent
       abstracts (BIGPATENT, subset G — physics and computing, grants through
       roughly 2014). Nothing filed after that is in the index, so a recent idea

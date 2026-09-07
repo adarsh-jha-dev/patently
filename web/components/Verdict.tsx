@@ -27,23 +27,23 @@ export function VerdictPanel({ result }: { result: AnalyzeResult }) {
       <div className="flex flex-wrap items-start justify-between gap-6">
         <div className="min-w-0 flex-1">
           <span className="eyebrow">Assessment</span>
-          <h2 className="mt-1.5 text-[19px] font-medium tracking-tight">
+          <h2 className="mt-1.5 text-xl font-medium tracking-tight">
             {result.title}
           </h2>
-          <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-[var(--text-muted)]">
+          <p className="mt-2 max-w-2xl text-base leading-relaxed text-[var(--text-muted)]">
             {verdict.summary}
           </p>
         </div>
 
         <div className="shrink-0 text-right">
           <div
-            className="tnum text-[44px] font-light leading-none tracking-tight"
+            className="tnum text-5xl font-light leading-none tracking-tight"
             style={{ color: `var(${tone})` }}
           >
             {verdict.conclusive ? verdict.novelty_score : "—"}
           </div>
-          <div className="mt-1 text-[12px] font-medium">{verdict.label}</div>
-          <div className="text-[11px] text-[var(--text-faint)]">
+          <div className="mt-1 text-xs font-medium">{verdict.label}</div>
+          <div className="text-2xs text-[var(--text-faint)]">
             {verdict.conclusive ? "novelty headroom" : "not enough signal"}
           </div>
         </div>
@@ -66,7 +66,7 @@ export function VerdictPanel({ result }: { result: AnalyzeResult }) {
       </div>
       )}
 
-      <dl className="mt-5 grid grid-cols-2 gap-x-8 gap-y-3 border-t border-[var(--border)] pt-4 text-[13px] sm:grid-cols-4">
+      <dl className="mt-5 grid grid-cols-2 gap-x-8 gap-y-3 border-t border-[var(--border)] pt-4 text-sm sm:grid-cols-4">
         <Stat
           label="Closest single reference"
           value={`${Math.round(verdict.anticipation_risk * 100)}%`}
@@ -90,7 +90,7 @@ export function VerdictPanel({ result }: { result: AnalyzeResult }) {
       </dl>
 
       {typeof stats.quotes_demoted === "number" && stats.quotes_demoted > 0 && (
-        <p className="mt-3 text-[12px] text-[var(--text-faint)]">
+        <p className="mt-3 text-xs text-[var(--text-faint)]">
           {stats.quotes_demoted} finding
           {stats.quotes_demoted === 1 ? "" : "s"} downgraded because the cited
           passage could not be located verbatim in the source abstract.
@@ -111,11 +111,11 @@ function Stat({
 }) {
   return (
     <div>
-      <dt className="text-[11px] text-[var(--text-faint)]">{label}</dt>
-      <dd className="tnum mt-0.5 text-[17px] font-medium tracking-tight">
+      <dt className="text-2xs text-[var(--text-faint)]">{label}</dt>
+      <dd className="tnum mt-0.5 text-xl font-medium tracking-tight">
         {value}
       </dd>
-      <dd className="text-[11px] text-[var(--text-faint)]">{hint}</dd>
+      <dd className="text-2xs text-[var(--text-faint)]">{hint}</dd>
     </div>
   );
 }
