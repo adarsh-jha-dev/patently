@@ -14,6 +14,10 @@ import { cn } from "@/lib/utils";
  * Active section comes from an IntersectionObserver rather than scroll maths:
  * it stays correct when sections resize (references expand on click) without
  * recomputing offsets.
+ *
+ * Stickiness lives on the <aside> that wraps this, not here: the grid uses
+ * `items-start`, so the item is content-height and a sticky child would have
+ * nothing to travel within.
  */
 
 export interface NavSection {
@@ -49,7 +53,7 @@ export function ReportNav({ sections }: { sections: NavSection[] }) {
   }, [sections]);
 
   return (
-    <nav aria-label="Report sections" className="sticky top-8">
+    <nav aria-label="Report sections">
       <p className="eyebrow mb-3">On this page</p>
       <ul className="space-y-0.5 border-l border-[var(--border)]">
         {sections.map((s) => {

@@ -81,7 +81,7 @@ export function Report({
         </footer>
       </div>
 
-      <aside className="hidden xl:block">
+      <aside className="hidden self-start xl:sticky xl:top-8 xl:block xl:max-h-[calc(100vh-4rem)] xl:overflow-y-auto">
         <ReportNav sections={sections} />
       </aside>
     </div>
