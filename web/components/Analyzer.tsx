@@ -138,7 +138,7 @@ export function Analyzer({ corpusNote }: { corpusNote?: React.ReactNode }) {
         <h1 className="max-w-2xl text-2xl font-semibold tracking-tight">
           Which parts of your invention does the prior art already teach?
         </h1>
-        <p className="mt-3 max-w-2xl text-lg leading-relaxed text-[var(--text-muted)]">
+        <p className="mt-3 max-w-2xl text-lg leading-relaxed text-muted">
           Describe it in plain English. You get back a claim-element map — each
           finding backed by a passage quoted verbatim from the patent it came
           from.

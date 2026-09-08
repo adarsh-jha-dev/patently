@@ -23,30 +23,23 @@ export function Report({
       <VerdictPanel result={result} />
       <ElementCoverage result={result} />
       <CoverageMatrix result={result} />
-      <div className="grid items-start gap-4 md:grid-cols-2">
-        <Whitespace result={result} />
-        <Combinations result={result} />
-      </div>
+      <Whitespace result={result} />
+      <Combinations result={result} />
       <References result={result} />
       <Angles result={result} />
 
-      <footer className="border-t border-[var(--border)] pt-5 text-2xs leading-relaxed text-[var(--text-faint)]">
-        <p>
-          {result.stats.llm_calls} model calls · {result.stats.pool} patents
-          reached · {result.stats.assessed} assessed
-          {result.stats.rubric_fields
-            ? ` · ${result.stats.rubric_fields} rubric answers used`
-            : ""}
-          {result.elapsed_ms
-            ? ` · ${(result.elapsed_ms / 1000).toFixed(1)}s`
-            : ""}
-        </p>
-        {corpus && (
-          <p className="mt-1.5">
-            Searched <span className="tnum">{corpus.size.toLocaleString()}</span>{" "}
-            indexed abstracts from <span className="mono">{corpus.name}</span>.
-          </p>
-        )}
+      <footer className="border-t border-[var(--border)] pt-6 text-2xs leading-relaxed text-[var(--text-faint)]">
+        <dl className="mb-5 flex flex-wrap gap-x-10 gap-y-4">
+          <RunStat label="Model calls" value={String(result.stats.llm_calls ?? 0)} />
+          <RunStat label="Patents reached" value={(result.stats.pool ?? 0).toLocaleString()} />
+          <RunStat label="Assessed in depth" value={String(result.stats.assessed ?? 0)} />
+          {result.elapsed_ms ? (
+            <RunStat label="Elapsed" value={`${(result.elapsed_ms / 1000).toFixed(1)}s`} />
+          ) : null}
+          {corpus ? (
+            <RunStat label="Corpus searched" value={corpus.size.toLocaleString()} />
+          ) : null}
+        </dl>
         <p className="mt-1.5 max-w-2xl">
           Patently searches an indexed corpus, not the full patent literature —
           an empty result means nothing was found in what was indexed, not that
@@ -54,6 +47,17 @@ export function Report({
           opinion or legal advice.
         </p>
       </footer>
+    </div>
+  );
+}
+
+function RunStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-2xs text-[var(--text-faint)]">{label}</dt>
+      <dd className="tnum mt-0.5 text-lg font-semibold tracking-tight text-[var(--text)]">
+        {value}
+      </dd>
     </div>
   );
 }
