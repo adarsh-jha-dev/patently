@@ -50,7 +50,7 @@ export function ElementCoverage({ result }: { result: AnalyzeResult }) {
         </h2>
         <Legend />
       </div>
-      <p className="mb-5 text-sm text-[var(--text-muted)]">
+      <p className="mb-5 max-w-prose text-sm text-[var(--text-muted)]">
         Of the {references.length} references assessed, how many teach each part
         of your invention.
         {untouched > 0 && (

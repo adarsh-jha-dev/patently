@@ -20,7 +20,7 @@ export function Whitespace({ result }: { result: AnalyzeResult }) {
     return (
       <Card className="rise p-5 sm:p-6">
         <span className="eyebrow">Novelty whitespace</span>
-        <p className="mt-3 text-base leading-relaxed text-[var(--text-muted)]">
+        <p className="mt-3 max-w-prose text-base leading-relaxed text-[var(--text-muted)]">
           Every element you described is taught, at least in part, by something
           in the corpus. Novelty likely has to come from the specific
           combination, or from a limitation narrower than the description
@@ -69,7 +69,7 @@ export function Whitespace({ result }: { result: AnalyzeResult }) {
                 {e.id}
               </span>
               <span className="text-base font-semibold">{e.label}</span>
-              <p className="mt-1 text-sm leading-relaxed text-[var(--text-muted)]">
+              <p className="mt-1 max-w-prose text-sm leading-relaxed text-[var(--text-muted)]">
                 {e.text}
               </p>
             </span>
@@ -95,7 +95,7 @@ export function Combinations({ result }: { result: AnalyzeResult }) {
   return (
     <Card className="rise p-5 sm:p-6">
       <h2 className="text-xl font-semibold tracking-tight">Combination risk</h2>
-      <p className="mt-1.5 text-sm leading-relaxed text-[var(--text-muted)]">
+      <p className="mt-1.5 max-w-prose text-sm leading-relaxed text-[var(--text-muted)]">
         Pairs that together read on more of the invention than either does
         alone — the shape of an obviousness rejection. Found by set arithmetic
         over the coverage matrix, so the same inputs always give the same pairs.
@@ -196,7 +196,7 @@ export function Angles({ result }: { result: AnalyzeResult }) {
   return (
     <Card className="rise p-5 sm:p-6">
       <h2 className="text-xl font-semibold tracking-tight">Search angles</h2>
-      <p className="mt-1.5 text-sm leading-relaxed text-[var(--text-muted)]">
+      <p className="mt-1.5 max-w-prose text-sm leading-relaxed text-[var(--text-muted)]">
         One embedding of a whole description averages away the specifics. These
         were searched separately and the rankings fused — the bars show how many
         of the {assessed} assessed references each angle surfaced.
@@ -239,7 +239,7 @@ export function Angles({ result }: { result: AnalyzeResult }) {
                 />
               </div>
 
-              <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">
+              <p className="mt-2 max-w-prose text-sm leading-relaxed text-[var(--text-muted)]">
                 {q.text}
               </p>
             </li>

@@ -5,6 +5,7 @@ import { CoverageMatrix } from "@/components/CoverageMatrix";
 import { ElementCoverage } from "@/components/ElementCoverage";
 import { Angles, Combinations, References, Whitespace } from "@/components/Findings";
 import type { AnalyzeResult } from "@/lib/types";
+import { ReportNav, type NavSection } from "@/components/ReportNav";
 
 /**
  * Shared by the live analysis and the saved permalink, so a shared link cannot
@@ -18,17 +19,48 @@ export function Report({
   result: AnalyzeResult;
   corpus?: { name: string; size: number } | null;
 }) {
-  return (
-    <div className="space-y-8">
-      <VerdictPanel result={result} />
-      <ElementCoverage result={result} />
-      <CoverageMatrix result={result} />
-      <Whitespace result={result} />
-      <Combinations result={result} />
-      <References result={result} />
-      <Angles result={result} />
+  const sections: NavSection[] = [
+    { id: "assessment", label: "Assessment" },
+    { id: "elements", label: "Element coverage" },
+    { id: "matrix", label: "Coverage map" },
+    { id: "whitespace", label: "Whitespace" },
+    ...(result.combinations.length
+      ? [{ id: "combinations", label: "Combination risk" }]
+      : []),
+    { id: "references", label: "References" },
+    { id: "angles", label: "Search angles" },
+  ];
 
-      <footer className="border-t border-[var(--border)] pt-6 text-2xs leading-relaxed text-[var(--text-faint)]">
+  return (
+    // The rail appears only when there is genuinely room for it. Below xl this
+    // collapses to the single column the content was designed for.
+    <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_200px] xl:items-start xl:gap-10">
+      <div className="min-w-0 space-y-8">
+        <section id="assessment" className="scroll-mt-8">
+          <VerdictPanel result={result} />
+        </section>
+        <section id="elements" className="scroll-mt-8">
+          <ElementCoverage result={result} />
+        </section>
+        <section id="matrix" className="scroll-mt-8">
+          <CoverageMatrix result={result} />
+        </section>
+        <section id="whitespace" className="scroll-mt-8">
+          <Whitespace result={result} />
+        </section>
+        {result.combinations.length > 0 && (
+          <section id="combinations" className="scroll-mt-8">
+            <Combinations result={result} />
+          </section>
+        )}
+        <section id="references" className="scroll-mt-8">
+          <References result={result} />
+        </section>
+        <section id="angles" className="scroll-mt-8">
+          <Angles result={result} />
+        </section>
+
+        <footer className="border-t border-[var(--border)] pt-6 text-2xs leading-relaxed text-[var(--text-faint)]">
         <dl className="mb-5 flex flex-wrap gap-x-10 gap-y-4">
           <RunStat label="Model calls" value={String(result.stats.llm_calls ?? 0)} />
           <RunStat label="Patents reached" value={(result.stats.pool ?? 0).toLocaleString()} />
@@ -46,7 +78,12 @@ export function Report({
           nothing exists. This is a research tool and not a freedom-to-operate
           opinion or legal advice.
         </p>
-      </footer>
+        </footer>
+      </div>
+
+      <aside className="hidden xl:block">
+        <ReportNav sections={sections} />
+      </aside>
     </div>
   );
 }

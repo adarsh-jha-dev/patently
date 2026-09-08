@@ -122,7 +122,8 @@ export function RubricForm({
     description.trim().length > 0 && !status.descriptionOk;
 
   return (
-    <div className="pb-28">
+    <div className="pb-28 lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-8 lg:pb-0">
+      <div className="min-w-0">
       {/* Description first: it carries the mechanism, and everything the
           rubric collects only qualifies it. */}
       <Card className="p-5 sm:p-6">
@@ -251,10 +252,90 @@ export function RubricForm({
         );
       })}
 
-      {/* Sticky submit. The gate is completion, not knowledge: nine answers,
-          any of which may be "not sure". */}
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--border)] bg-[var(--bg)]/85 backdrop-blur-md">
-        <div className="mx-auto flex max-w-4xl items-center gap-4 px-6 py-3">
+      </div>
+
+      {/* Desktop: the progress panel sits beside the fields, so completion is
+          visible while filling them rather than pinned to the bottom edge. */}
+      <aside className="sticky top-8 hidden lg:block">
+        <Card className="p-5">
+          <p className="eyebrow">Progress</p>
+          <p className="tnum mt-2 text-2xl font-semibold tracking-tight">
+            {status.answered}
+            <span className="text-lg font-normal text-[var(--text-faint)]">
+              /{status.total}
+            </span>
+          </p>
+          <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface-sunk)]">
+            <motion.div
+              className="h-full rounded-full bg-[var(--accent)]"
+              initial={false}
+              animate={{ width: `${(status.answered / status.total) * 100}%` }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            />
+          </div>
+
+          <ul className="mt-4 space-y-2 border-t border-[var(--border)] pt-4">
+            <li className="flex items-center justify-between gap-3 text-sm">
+              <span className={status.descriptionOk ? "" : "text-[var(--text-muted)]"}>
+                Description
+              </span>
+              <span className="tnum text-2xs text-[var(--text-faint)]">
+                {status.descriptionOk ? "done" : "—"}
+              </span>
+            </li>
+            {SECTIONS.map((section) => {
+              const done = sectionAnswered(section, values);
+              return (
+                <li
+                  key={section.title}
+                  className="flex items-center justify-between gap-3 text-sm"
+                >
+                  <span
+                    className={
+                      done === section.fields.length ? "" : "text-[var(--text-muted)]"
+                    }
+                  >
+                    {section.title}
+                  </span>
+                  <span className="tnum text-2xs text-[var(--text-faint)]">
+                    {done}/{section.fields.length}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+
+          <p className="mt-4 text-2xs leading-relaxed text-[var(--text-faint)]">
+            {status.complete
+              ? known === ALL_FIELDS.length
+                ? "Every question answered."
+                : `${ALL_FIELDS.length - known} answered “not sure” — those axes will be searched broadly.`
+              : "Answer every question to run the analysis."}
+          </p>
+
+          <div className="mt-4 flex items-center gap-2">
+            <Button
+              size="md"
+              onClick={onSubmit}
+              disabled={running || !status.complete}
+              className="flex-1"
+            >
+              {running ? "Analyzing…" : "Analyze"}
+              {!running && <ArrowRight size={16} strokeWidth={2} />}
+            </Button>
+            {status.answered > 0 && !running && (
+              <Button variant="ghost" size="sm" onClick={onReset}>
+                Clear
+              </Button>
+            )}
+          </div>
+        </Card>
+      </aside>
+
+      {/* Mobile and tablet keep the bottom bar — there is no room beside the
+          fields, and the submit must stay reachable without scrolling back. */}
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--border)] bg-[var(--bg)]/85 backdrop-blur-md lg:hidden">
+        <div className="mx-auto flex max-w-4xl items-center gap-4 px-5 py-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline gap-2">
               <span className="tnum text-xs font-medium">

@@ -63,7 +63,7 @@ export default async function SavedAnalysis({
   });
 
   return (
-    <main className="mx-auto max-w-4xl px-5 py-10 sm:px-6 sm:py-16">
+    <main className="mx-auto w-full max-w-[1440px] px-5 py-10 sm:px-8 sm:py-14">
       <header className="mb-8">
         <div className="mb-6 flex items-center justify-between gap-4">
           <Link

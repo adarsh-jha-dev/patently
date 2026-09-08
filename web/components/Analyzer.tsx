@@ -118,7 +118,7 @@ export function Analyzer({ corpusNote }: { corpusNote?: React.ReactNode }) {
   }, [text, rubric]);
 
   return (
-    <main className="mx-auto max-w-4xl px-5 py-10 sm:px-6 sm:py-16">
+    <main className="mx-auto w-full max-w-[1440px] px-5 py-10 sm:px-8 sm:py-14">
       <header className="mb-10">
         <div className="mb-7 flex items-start justify-between gap-4">
           <div className="flex items-center gap-2.5">
